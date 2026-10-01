@@ -1,0 +1,516 @@
+{
+  "split": "test",
+  "model": "qwen2.5:7b-instruct-q4_K_M",
+  "graded_by": "Claude, same rubrics as the dev grades (see rag_dev_grades.json and closed_book_dev_grades.json). Not re-read by a second reader; not human-verified.",
+  "retrieval": {
+    "hit_at_5": 0.788,
+    "mrr": 0.602,
+    "n_scored": 33
+  },
+  "rag": {
+    "answers_file": "rag_test_qwen2.5_7b-instruct-q4_K_M.json",
+    "counts": {
+      "correct": 19,
+      "partial": 3,
+      "wrong": 11
+    },
+    "score": 20.5,
+    "scored": 33,
+    "faithfulness": {
+      "supported": 26,
+      "partly_supported": 4,
+      "unsupported": 3
+    },
+    "causes": {
+      "retrieval_miss": 7,
+      "retrieval_content_miss": 2,
+      "generation": 5
+    },
+    "adversarial_declined": 4,
+    "graded": [
+      {
+        "id": "d001",
+        "grade": "correct",
+        "faithfulness": "supported",
+        "cause": null,
+        "reason": "Small amounts only, not large values like dataframes; excerpt [1]."
+      },
+      {
+        "id": "d002",
+        "grade": "correct",
+        "faithfulness": "supported",
+        "cause": null,
+        "reason": "Specify task_ids explicitly; xcoms.rst excerpts."
+      },
+      {
+        "id": "d004",
+        "grade": "wrong",
+        "faithfulness": "unsupported",
+        "cause": "generation",
+        "reason": "Says not covered; pools.rst excerpt [2] states default_pool is initialized with 128 slots."
+      },
+      {
+        "id": "d005",
+        "grade": "wrong",
+        "faithfulness": "supported",
+        "cause": "retrieval_miss",
+        "reason": "Says not covered; pools.rst not retrieved."
+      },
+      {
+        "id": "d007",
+        "grade": "correct",
+        "faithfulness": "supported",
+        "cause": null,
+        "reason": "Effective weight is the aggregate sum of downstream descendants; excerpt [1]."
+      },
+      {
+        "id": "d008",
+        "grade": "wrong",
+        "faithfulness": "partly_supported",
+        "cause": "retrieval_miss",
+        "reason": "deferring.rst not retrieved. Says deferred tasks can still count as occupying, configurable via pool_slots; pools.rst [1] says the pool can include deferred tasks, but pool_slots is unrelated to that."
+      },
+      {
+        "id": "d010",
+        "grade": "wrong",
+        "faithfulness": "supported",
+        "cause": "retrieval_miss",
+        "reason": "Says not covered; deferring.rst not retrieved."
+      },
+      {
+        "id": "d011",
+        "grade": "correct",
+        "faithfulness": "supported",
+        "cause": null,
+        "reason": "Scheduler determines the count from upstream outputs right before execution."
+      },
+      {
+        "id": "d013",
+        "grade": "wrong",
+        "faithfulness": "supported",
+        "cause": "retrieval_content_miss",
+        "reason": "Says not covered; dynamic-task-mapping.rst retrieved but no excerpt mentions keyword or positional arguments."
+      },
+      {
+        "id": "d014",
+        "grade": "correct",
+        "faithfulness": "supported",
+        "cause": null,
+        "reason": "Backfill does not make sense for Dags without a time-based schedule."
+      },
+      {
+        "id": "d016",
+        "grade": "correct",
+        "faithfulness": "supported",
+        "cause": null,
+        "reason": "--run-backwards."
+      },
+      {
+        "id": "d017",
+        "grade": "correct",
+        "faithfulness": "supported",
+        "cause": null,
+        "reason": "Connection passwords and variables; answered from variable.rst/connection.rst, fernet.rst not retrieved (hit@5 false)."
+      },
+      {
+        "id": "d018",
+        "grade": "correct",
+        "faithfulness": "supported",
+        "cause": null,
+        "reason": "Generated on first start and saved to fernet_key in [core]; fernet.rst [1]."
+      },
+      {
+        "id": "d019",
+        "grade": "correct",
+        "faithfulness": "supported",
+        "cause": null,
+        "reason": "AIRFLOW__CORE__FERNET_KEY, in fernet.rst [1]; answer cites [4] and pastes unrelated _CMD text, citation not scored."
+      },
+      {
+        "id": "d020",
+        "grade": "wrong",
+        "faithfulness": "supported",
+        "cause": "retrieval_content_miss",
+        "reason": "Says not covered; dynamic-dag-generation.rst retrieved but not the metadata-DB sentence."
+      },
+      {
+        "id": "d021",
+        "grade": "wrong",
+        "faithfulness": "supported",
+        "cause": "retrieval_miss",
+        "reason": "Says not covered; dynamic-dag-generation.rst not retrieved."
+      },
+      {
+        "id": "d023",
+        "grade": "correct",
+        "faithfulness": "supported",
+        "cause": null,
+        "reason": "slack_api_default; slack.rst [5]."
+      },
+      {
+        "id": "d025",
+        "grade": "correct",
+        "faithfulness": "supported",
+        "cause": null,
+        "reason": "Failure does not mean bad credentials for MinIO/LocalStack; aws.rst [1]."
+      },
+      {
+        "id": "d026",
+        "grade": "correct",
+        "faithfulness": "partly_supported",
+        "cause": null,
+        "reason": "ADC and service-account key (path, payload, Secret Manager) match the expected answer; adds impersonation as the third way, which the excerpts do not list (gcp.rst's third way, a credential configuration file, was cut off; the answer key also omits it)."
+      },
+      {
+        "id": "d027",
+        "grade": "correct",
+        "faithfulness": "supported",
+        "cause": null,
+        "reason": "Only one way of defining the key at a time; gcp.rst [1]."
+      },
+      {
+        "id": "d028",
+        "grade": "wrong",
+        "faithfulness": "supported",
+        "cause": "retrieval_miss",
+        "reason": "Says not covered; copy_into.rst not retrieved."
+      },
+      {
+        "id": "d029",
+        "grade": "correct",
+        "faithfulness": "supported",
+        "cause": null,
+        "reason": "All seven formats; copy_into.rst [1]."
+      },
+      {
+        "id": "s031",
+        "grade": "correct",
+        "faithfulness": "supported",
+        "cause": null,
+        "reason": "Queued tasks start by priority-weight of the task and its descendants (pools.rst [1]), so pool size alone does not decide. priority-weight.rst not retrieved."
+      },
+      {
+        "id": "s032",
+        "grade": "correct",
+        "faithfulness": "supported",
+        "cause": null,
+        "reason": "Deferred tasks do not occupy slots by default; editing the pool changes that; deferring.rst."
+      },
+      {
+        "id": "s033",
+        "grade": "partial",
+        "faithfulness": "partly_supported",
+        "cause": "retrieval_miss",
+        "reason": "Runtime determination of the mapped count is stated (mappedoperator.py docstring); value passing is attributed to lazy proxies/expand rather than XComs, and xcoms.rst was not retrieved."
+      },
+      {
+        "id": "s035",
+        "grade": "correct",
+        "faithfulness": "supported",
+        "cause": null,
+        "reason": "XCom for small messages, remote storage for larger data; best-practices.rst [1]. xcoms.rst not retrieved (hit@5 false)."
+      },
+      {
+        "id": "s036",
+        "grade": "wrong",
+        "faithfulness": "unsupported",
+        "cause": "generation",
+        "reason": "Says one setting controls both; backfill.rst [1]/[2] give --run-backwards and an independent backfill max_active_runs."
+      },
+      {
+        "id": "s037",
+        "grade": "wrong",
+        "faithfulness": "unsupported",
+        "cause": "generation",
+        "reason": "Says downstream work does not affect competition; pools.rst [3] says queued tasks start by priority-weight of the task and its descendants."
+      },
+      {
+        "id": "s039",
+        "grade": "partial",
+        "faithfulness": "supported",
+        "cause": "generation",
+        "reason": "Says the docs do not cover interchangeability, which matches 'not established', but does not distinguish the GCP credential choices from the Slack token although gcp.rst and slack.rst were retrieved."
+      },
+      {
+        "id": "s040",
+        "grade": "correct",
+        "faithfulness": "supported",
+        "cause": null,
+        "reason": "Mapping count from upstream outputs at runtime; queued tasks start by priority-weight as slots free; dynamic-task-mapping.rst and pools.rst."
+      },
+      {
+        "id": "s041",
+        "grade": "wrong",
+        "faithfulness": "partly_supported",
+        "cause": "generation",
+        "reason": "Quotes that deferred tasks do not occupy slots, then concludes they can be considered as holding capacity; says queue priority is not covered (priority-weight.rst not retrieved)."
+      },
+      {
+        "id": "s043",
+        "grade": "correct",
+        "faithfulness": "supported",
+        "cause": null,
+        "reason": "Opens with 'does not cover it' but states the excerpts treat the three concepts separately and do not make mapping another name for either."
+      },
+      {
+        "id": "s044",
+        "grade": "partial",
+        "faithfulness": "supported",
+        "cause": "retrieval_miss",
+        "reason": "Both points given are about mapping; priority-weight not mentioned and priority-weight.rst not retrieved."
+      }
+    ],
+    "adversarial": [
+      {
+        "id": "a046",
+        "declined": false,
+        "note": "Lists the tutorial Postgres connection fields from pipeline.rst [1]; the corpus does contain that tutorial, so the 'no answer' label is questionable for this item (recorded, not changed: test results already seen)."
+      },
+      {
+        "id": "a047",
+        "declined": false,
+        "note": "Answers with the cncf-kubernetes extra from extra-packages-ref.rst [3]."
+      },
+      {
+        "id": "a049",
+        "declined": true,
+        "note": "Says not covered."
+      },
+      {
+        "id": "a050",
+        "declined": true,
+        "note": "Says not covered."
+      },
+      {
+        "id": "a052",
+        "declined": true,
+        "note": "Says not covered."
+      },
+      {
+        "id": "a053",
+        "declined": false,
+        "note": "Rewrites the generic connection.rst CLI examples with Oracle-specific values that the excerpts do not contain."
+      },
+      {
+        "id": "a054",
+        "declined": true,
+        "note": "Says not covered."
+      }
+    ]
+  },
+  "closed_book_framed": {
+    "answers_file": "closed_book_test_qwen2.5_7b-instruct-q4_K_M_framed.json",
+    "counts": {
+      "correct": 10,
+      "partial": 11,
+      "wrong": 12
+    },
+    "score": 15.5,
+    "scored": 33,
+    "adversarial_hedged": 0,
+    "graded": [
+      {
+        "id": "d001",
+        "grade": "correct",
+        "reason": "Small data; large data to external storage."
+      },
+      {
+        "id": "d002",
+        "grade": "partial",
+        "reason": "Says to specify the task ID, but via XCom.get_one(task_id=...) rather than xcom_pull(task_ids=...)."
+      },
+      {
+        "id": "d004",
+        "grade": "wrong",
+        "reason": "Says 4 (default_pool_size)."
+      },
+      {
+        "id": "d005",
+        "grade": "wrong",
+        "reason": "Says it can be removed."
+      },
+      {
+        "id": "d007",
+        "grade": "wrong",
+        "reason": "Says tasks further downstream get higher priority; expected answer: weight aggregates downstream descendants, so upstream tasks weigh more."
+      },
+      {
+        "id": "d008",
+        "grade": "wrong",
+        "reason": "Says a deferred task still occupies its slot."
+      },
+      {
+        "id": "d010",
+        "grade": "wrong",
+        "reason": "Describes 'Task Resiliency'; not async tasks."
+      },
+      {
+        "id": "d011",
+        "grade": "correct",
+        "reason": "Count determined when the task executes, from upstream output."
+      },
+      {
+        "id": "d013",
+        "grade": "partial",
+        "reason": "Says expand() is not for positional arguments directly, but never says keyword-only and describes an op_args workaround."
+      },
+      {
+        "id": "d014",
+        "grade": "wrong",
+        "reason": "Says backfill can still be useful without a time-based schedule."
+      },
+      {
+        "id": "d016",
+        "grade": "wrong",
+        "reason": "No --run-backwards; start/end dates only."
+      },
+      {
+        "id": "d017",
+        "grade": "correct",
+        "reason": "Connection passwords and variable values."
+      },
+      {
+        "id": "d018",
+        "grade": "correct",
+        "reason": "Key generated on first start and stored in airflow.cfg fernet_key."
+      },
+      {
+        "id": "d019",
+        "grade": "wrong",
+        "reason": "FERNET_KEY / AIRFLOW_FERNET_KEY, not AIRFLOW__CORE__FERNET_KEY."
+      },
+      {
+        "id": "d020",
+        "grade": "correct",
+        "reason": "Fetching the Variable calls the metadata database during DAG load, adding time and scheduler load."
+      },
+      {
+        "id": "d021",
+        "grade": "partial",
+        "reason": "Environment variables appear as the third of three options; the first two are default_args and Variable.get, the thing to avoid."
+      },
+      {
+        "id": "d023",
+        "grade": "wrong",
+        "reason": "slack_default."
+      },
+      {
+        "id": "d025",
+        "grade": "correct",
+        "reason": "A failure does not necessarily mean bad credentials."
+      },
+      {
+        "id": "d026",
+        "grade": "partial",
+        "reason": "ADC and service-account keys; no key-payload or Secret Manager option."
+      },
+      {
+        "id": "d027",
+        "grade": "wrong",
+        "reason": "Says multiple key options can be specified."
+      },
+      {
+        "id": "d028",
+        "grade": "wrong",
+        "reason": "Lists spark_jdbc_url, file, dbtable."
+      },
+      {
+        "id": "d029",
+        "grade": "partial",
+        "reason": "Parquet, CSV, Avro: 3 of the 7 formats, presented as the full list."
+      },
+      {
+        "id": "s031",
+        "grade": "partial",
+        "reason": "Names priority as one of several factors alongside queue order and dependencies; no descendants."
+      },
+      {
+        "id": "s032",
+        "grade": "partial",
+        "reason": "Deferred tasks do not consume slots; does not say the pool can be configured to count them."
+      },
+      {
+        "id": "s033",
+        "grade": "correct",
+        "reason": "Count determined at runtime from the upstream result; values passed with XCom."
+      },
+      {
+        "id": "s035",
+        "grade": "correct",
+        "reason": "XCom for small results; avoid large datasets."
+      },
+      {
+        "id": "s036",
+        "grade": "partial",
+        "reason": "Says the two are controlled by different settings, but claims newest-first is inherent and names settings not in backfill.rst; no --run-backwards."
+      },
+      {
+        "id": "s037",
+        "grade": "wrong",
+        "reason": "Says downstream task count does not directly affect priority."
+      },
+      {
+        "id": "s039",
+        "grade": "correct",
+        "reason": "Not interchangeable; different services and credentials."
+      },
+      {
+        "id": "s040",
+        "grade": "partial",
+        "reason": "Pool side: tasks queue for slots, without priority-weight; mapping side: no runtime/upstream point."
+      },
+      {
+        "id": "s041",
+        "grade": "partial",
+        "reason": "Deferred tasks do not consume slots unless configured; queue priority said to be separate but attributed to the queue parameter, not priority-weight."
+      },
+      {
+        "id": "s043",
+        "grade": "correct",
+        "reason": "Not synonymous with either."
+      },
+      {
+        "id": "s044",
+        "grade": "partial",
+        "reason": "Runtime mapping from upstream output; queuing described generically, no priority-weight."
+      }
+    ],
+    "adversarial": [
+      {
+        "id": "a046",
+        "hedged": false,
+        "note": "Lists Postgres connection fields."
+      },
+      {
+        "id": "a047",
+        "hedged": false,
+        "note": "Step-by-step Kubernetes setup; truncated at 768 tokens."
+      },
+      {
+        "id": "a049",
+        "hedged": false,
+        "note": "Step-by-step Datadog setup; truncated at 768 tokens."
+      },
+      {
+        "id": "a050",
+        "hedged": false,
+        "note": "Explains the parameter as exponential backoff, default 2."
+      },
+      {
+        "id": "a052",
+        "hedged": false,
+        "note": "States Airflow has no built-in feature for this, then describes a workaround. A confident negative, not a statement of uncertainty."
+      },
+      {
+        "id": "a053",
+        "hedged": false,
+        "note": "Step-by-step Oracle setup; truncated at 768 tokens."
+      },
+      {
+        "id": "a054",
+        "hedged": false,
+        "note": "Says a Slack token cannot configure Snowflake, then lists Snowflake fields."
+      }
+    ]
+  }
+}

@@ -1,0 +1,381 @@
+{
+  "rubric": {
+    "correct": "States the point the question asks for. Extra claims are noted, not scored.",
+    "partial": "States part of what the question asks (one of two asked-for points, or the right headline with contradicting details).",
+    "wrong": "Misses or contradicts the asked-for point, or answers outside the Airflow domain.",
+    "adversarial_recorded": "Adversarial questions (expected_source none) are not scored as correct/wrong. The only property recorded is whether the model refused or stated uncertainty (hedged: true/false). The factual content of an adversarial answer is not judged.",
+    "scope_rule": "Only the points the question asks for are required. Content in expected_answer the question does not ask for is not required (see s034/s038 correction in docs/DESIGN.md).",
+    "reason_rule": "Reasons state only the comparison with expected_answer, or a claim checked against the named corpus file. Side claims that were not checked against a source are not recorded.",
+    "hedged_definition": "hedged=true only if the model refuses, or says it does not know or cannot verify whether the thing asked about exists. A caveat that details may vary by version, or a correction of the question's premise followed by a full answer, is recorded as hedged=false with a note."
+  },
+  "graded_by": "Claude, hand-read against eval/questions.json expected_answer. Five decision-critical judgments were re-read by a second, independent Claude session and confirmed (docs/DESIGN.md, 2026-10-01); not human-verified.",
+  "revision": "2026-09-30: adversarial notes replaced by hedged true/false; unverified side claims removed from reasons. No grade changed. Previous version's adversarial notes on a045/a048/a051 were never verified. 2026-09-30: framed condition added; per-model results moved under conditions.unframed / conditions.framed.",
+  "conditions": {
+    "unframed": {
+      "system_prompt": null,
+      "models": {
+        "qwen2.5:7b-instruct-q4_K_M": {
+          "answers_file": "closed_book_dev_qwen2.5_7b-instruct-q4_K_M.json",
+          "scored": 12,
+          "counts": {
+            "correct": 3,
+            "partial": 1,
+            "wrong": 8
+          },
+          "graded": [
+            {
+              "id": "d000",
+              "grade": "correct",
+              "reason": "Says the current task's XCom is pulled. No mention of the Airflow 2 difference (not asked)."
+            },
+            {
+              "id": "d003",
+              "grade": "wrong",
+              "reason": "Did not recognise Airflow; generic project-management answer. No default_pool."
+            },
+            {
+              "id": "d006",
+              "grade": "partial",
+              "reason": "Names task priority as the primary factor; does not mention descendants."
+            },
+            {
+              "id": "d009",
+              "grade": "wrong",
+              "reason": "Did not recognise Airflow; Celery/thread-pool answer. Truncated at 768 tokens, grade unaffected."
+            },
+            {
+              "id": "d012",
+              "grade": "wrong",
+              "reason": "No parse-time vs runtime contrast."
+            },
+            {
+              "id": "d015",
+              "grade": "wrong",
+              "reason": "Says backfills obey the DAG max_active_runs and proposes a --limit option; backfill.rst says backfill max_active_runs is applied independently of the Dag setting and contains no --limit option."
+            },
+            {
+              "id": "d022",
+              "grade": "correct",
+              "reason": "Bot token or app token, i.e. a Slack API token."
+            },
+            {
+              "id": "d024",
+              "grade": "wrong",
+              "reason": "Describes a network connectivity test; no credential check via GetCallerIdentity."
+            },
+            {
+              "id": "s030",
+              "grade": "wrong",
+              "reason": "Generic FIFO and worker-concurrency answer; neither default_pool/128 nor priority_weight 1/downstream."
+            },
+            {
+              "id": "s034",
+              "grade": "wrong",
+              "reason": "No metadata DB lookup point; says Variables are not available during parsing, whereas howto/dynamic-dag-generation.rst says top-level Variable access works but connects to the metadata DB and can slow parsing."
+            },
+            {
+              "id": "s038",
+              "grade": "correct",
+              "reason": "Credentials valid, but permission for specific actions/resources is unanswered."
+            },
+            {
+              "id": "s042",
+              "grade": "wrong",
+              "reason": "Neither point: no DB-lookup reason, no Fernet."
+            }
+          ],
+          "adversarial_recorded": [
+            {
+              "id": "a045",
+              "hedged": false,
+              "note": "Step-by-step configuration answer; no refusal or stated uncertainty."
+            },
+            {
+              "id": "a048",
+              "hedged": false,
+              "note": "Explains an authentication flow as fact; no refusal or stated uncertainty."
+            },
+            {
+              "id": "a051",
+              "hedged": false,
+              "note": "Answers about AWS documentation; does not say it cannot see 'the packet'; no stated uncertainty."
+            }
+          ],
+          "n_hedged": 0
+        },
+        "llama3.1:8b-instruct-q4_K_M": {
+          "answers_file": "closed_book_dev_llama3.1_8b-instruct-q4_K_M.json",
+          "scored": 12,
+          "counts": {
+            "correct": 3,
+            "partial": 3,
+            "wrong": 6
+          },
+          "graded": [
+            {
+              "id": "d000",
+              "grade": "wrong",
+              "reason": "Says the XCom of the last executed task is returned."
+            },
+            {
+              "id": "d003",
+              "grade": "wrong",
+              "reason": "Did not recognise Airflow; asks for context. No default_pool."
+            },
+            {
+              "id": "d006",
+              "grade": "wrong",
+              "reason": "Lists priority but its scenario answer is FIFO queue order within the pool limit; no descendants."
+            },
+            {
+              "id": "d009",
+              "grade": "wrong",
+              "reason": "Did not recognise Airflow; Java ThreadPoolExecutor answer."
+            },
+            {
+              "id": "d012",
+              "grade": "partial",
+              "reason": "States defined-at-DAG-creation vs determined-at-runtime contrast, but generically and not in Airflow terms."
+            },
+            {
+              "id": "d015",
+              "grade": "partial",
+              "reason": "Right headline (a backfill can have its own limit, --max-active-runs), but says it obeys the DAG limit by default; backfill.rst says the backfill setting is applied independently of the Dag setting."
+            },
+            {
+              "id": "d022",
+              "grade": "correct",
+              "reason": "OAuth access token, i.e. a Slack API token."
+            },
+            {
+              "id": "d024",
+              "grade": "wrong",
+              "reason": "Self-contradictory: says it does not verify credentials, then that it does; no GetCallerIdentity, no service-access caveat."
+            },
+            {
+              "id": "s030",
+              "grade": "partial",
+              "reason": "Mentions a default pool (unnamed, no 128 slots); its second default ('current pool') matches neither expected default; no priority_weight defaults."
+            },
+            {
+              "id": "s034",
+              "grade": "correct",
+              "reason": "Environment variables avoid a database query during parsing. Extra security/scalability claims not scored."
+            },
+            {
+              "id": "s038",
+              "grade": "correct",
+              "reason": "Credentials valid, but which actions the account may perform is unanswered."
+            },
+            {
+              "id": "s042",
+              "grade": "wrong",
+              "reason": "Neither point; generic parsing and 'secrets management'. Explicitly says it cannot see the packet and is speculating."
+            }
+          ],
+          "adversarial_recorded": [
+            {
+              "id": "a045",
+              "hedged": false,
+              "note": "Step-by-step configuration answer; no refusal or stated uncertainty."
+            },
+            {
+              "id": "a048",
+              "hedged": false,
+              "note": "Explains an authentication flow as fact; no refusal or stated uncertainty."
+            },
+            {
+              "id": "a051",
+              "hedged": false,
+              "note": "Answers about AWS documentation; does not say it cannot see 'the packet'; no stated uncertainty."
+            }
+          ],
+          "n_hedged": 0
+        }
+      }
+    },
+    "framed": {
+      "system_prompt": "You are answering questions about Apache Airflow.",
+      "models": {
+        "qwen2.5:7b-instruct-q4_K_M": {
+          "answers_file": "closed_book_dev_qwen2.5_7b-instruct-q4_K_M_framed.json",
+          "scored": 12,
+          "counts": {
+            "correct": 4,
+            "partial": 2,
+            "wrong": 6
+          },
+          "graded": [
+            {
+              "id": "d000",
+              "grade": "wrong",
+              "reason": "Says the XCom of the most recent upstream task is pulled."
+            },
+            {
+              "id": "d003",
+              "grade": "correct",
+              "reason": "Names default_pool. Side claim of 2 default slots contradicts pools.rst (128 slots); not asked, not scored."
+            },
+            {
+              "id": "d006",
+              "grade": "wrong",
+              "reason": "Answer is FIFO queue order; no priority-weight."
+            },
+            {
+              "id": "d009",
+              "grade": "wrong",
+              "reason": "Says deferred tasks release slots by default, then proposes a custom operator; deferring.rst says the pool itself is edited."
+            },
+            {
+              "id": "d012",
+              "grade": "wrong",
+              "reason": "No parse-time vs runtime contrast."
+            },
+            {
+              "id": "d015",
+              "grade": "correct",
+              "reason": "A backfill can have its own limit independent of the DAG max_active_runs. The mechanism shown is not the one in backfill.rst; not scored."
+            },
+            {
+              "id": "d022",
+              "grade": "correct",
+              "reason": "A Slack API token."
+            },
+            {
+              "id": "d024",
+              "grade": "wrong",
+              "reason": "Says the test proves permissions; no GetCallerIdentity, no service-access caveat."
+            },
+            {
+              "id": "s030",
+              "grade": "partial",
+              "reason": "Names default_pool (no 128 slots); second default is FIFO/concurrency, not priority_weight 1/downstream."
+            },
+            {
+              "id": "s034",
+              "grade": "partial",
+              "reason": "States that reading env vars avoids querying the Airflow database during parsing, but also says Variables are unavailable during parsing, contradicted by howto/dynamic-dag-generation.rst."
+            },
+            {
+              "id": "s038",
+              "grade": "correct",
+              "reason": "Credentials work, but whether the IAM identity may perform the needed actions is unanswered."
+            },
+            {
+              "id": "s042",
+              "grade": "wrong",
+              "reason": "Neither point: no DB-lookup reason, no Fernet."
+            }
+          ],
+          "adversarial_recorded": [
+            {
+              "id": "a045",
+              "hedged": false,
+              "note": "Step-by-step configuration answer; no refusal or stated uncertainty."
+            },
+            {
+              "id": "a048",
+              "hedged": false,
+              "note": "Explains authentication methods as fact; no refusal or stated uncertainty."
+            },
+            {
+              "id": "a051",
+              "hedged": false,
+              "note": "Opens by correcting the premise ('Airflow itself does not directly handle key rotation'), then answers in full; does not mention the packet. Borderline under the hedged definition."
+            }
+          ],
+          "n_hedged": 0
+        },
+        "llama3.1:8b-instruct-q4_K_M": {
+          "answers_file": "closed_book_dev_llama3.1_8b-instruct-q4_K_M_framed.json",
+          "scored": 12,
+          "counts": {
+            "correct": 4,
+            "partial": 3,
+            "wrong": 5
+          },
+          "graded": [
+            {
+              "id": "d000",
+              "grade": "wrong",
+              "reason": "Says the XCom of the last task that wrote to XCom is returned."
+            },
+            {
+              "id": "d003",
+              "grade": "partial",
+              "reason": "Names default_pool, but adds that tasks fall into the first created pool when other pools exist; pools.rst says tasks without a pool are assigned to default_pool."
+            },
+            {
+              "id": "d006",
+              "grade": "partial",
+              "reason": "Names task priority as the deciding factor; does not mention descendants."
+            },
+            {
+              "id": "d009",
+              "grade": "wrong",
+              "reason": "Proposes a keep_slots argument to defer; deferring.rst says the pool itself is edited."
+            },
+            {
+              "id": "d012",
+              "grade": "correct",
+              "reason": "For-loop tasks are created at DAG parsing time; dynamic task mapping defines them at runtime."
+            },
+            {
+              "id": "d015",
+              "grade": "correct",
+              "reason": "A backfill can have its own limit, separate from the DAG max_active_runs."
+            },
+            {
+              "id": "d022",
+              "grade": "correct",
+              "reason": "A Slack API token."
+            },
+            {
+              "id": "d024",
+              "grade": "wrong",
+              "reason": "Self-contradictory on whether credentials are validated; no GetCallerIdentity."
+            },
+            {
+              "id": "s030",
+              "grade": "partial",
+              "reason": "Names default_pool (no 128 slots); second default ('default_pool_backfill') matches neither expected default."
+            },
+            {
+              "id": "s034",
+              "grade": "wrong",
+              "reason": "No metadata DB lookup or parse-slowdown point; gives security, flexibility and 'database writes' reasons."
+            },
+            {
+              "id": "s038",
+              "grade": "correct",
+              "reason": "Connection works, but whether the Airflow identity may perform the DAG's actions is unanswered."
+            },
+            {
+              "id": "s042",
+              "grade": "wrong",
+              "reason": "Neither point; states the packet is the Airflow docs and describes a context object and a secrets.json file."
+            }
+          ],
+          "adversarial_recorded": [
+            {
+              "id": "a045",
+              "hedged": false,
+              "note": "Step-by-step configuration answer; no refusal or stated uncertainty."
+            },
+            {
+              "id": "a048",
+              "hedged": false,
+              "note": "Explains two authentication methods as fact; no refusal or stated uncertainty."
+            },
+            {
+              "id": "a051",
+              "hedged": false,
+              "note": "Names specific files and a docs section as where rotation is explained; closes with 'exact location and details may vary', a version caveat, not doubt that it exists. Borderline under the hedged definition."
+            }
+          ],
+          "n_hedged": 0
+        }
+      }
+    }
+  }
+}

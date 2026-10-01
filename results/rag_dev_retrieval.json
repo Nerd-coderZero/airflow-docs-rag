@@ -1,0 +1,788 @@
+{
+  "run": {
+    "split": "dev",
+    "chunking_strategy": "fixed",
+    "retrieval_method": "dense",
+    "embedding_model": "BAAI/bge-small-en-v1.5",
+    "k": 5,
+    "n_chunks": 4171,
+    "avg_chunk_words": 168.7,
+    "n_scored": 12,
+    "hit_at_5": 0.917,
+    "mrr": 0.722,
+    "embed_and_index_seconds": 1089.6
+  },
+  "questions": [
+    {
+      "id": "d000",
+      "question": "I left `task_ids` out of `xcom_pull()`. Which task's XCom am I actually getting?",
+      "type": "direct",
+      "expected_source": "airflow-core/docs/core-concepts/xcoms.rst",
+      "expected_answer": "Only the current task's XCom is pulled when `task_ids` is omitted. The packet notes that this differs from Airflow 2, where the call searched all tasks.",
+      "hit_at_5": true,
+      "reciprocal_rank": 0.3333333333333333,
+      "retrieved": [
+        {
+          "rank": 1,
+          "score": 0.818675,
+          "chunk_id": "bed4ab168454",
+          "source_path": "airflow-core/docs/installation/upgrading_to_airflow3.rst",
+          "word_count": 200,
+          "text": "``task_ids`` argument now pulls only from the current task. In Airflow 2, omitting ``task_ids`` would search all tasks in the Dag run and return the most recently pushed value for the given key. You must now explicitly pass ``task_ids`` to pull XComs from other tasks: .. code-block:: python # Airflow 2 - pulls most recent value from any task value = ti.xcom_pull(key=\"shared_state\") # Airflow 3 - same call only checks the current task value = ti.xcom_pull(key=\"shared_state\") # Airflow 3 - specify task_ids to pull from other tasks value = ti.xcom_pull(task_ids=\"upstream_task\", key=\"shared_state\") .. _data-interval-manual-triggering: Manual Dag Runs and ``logical_date`` ==================================== For scheduled runs, ``logical_date`` and ``data_interval`` are both derived from the Dag's timetable. For manually triggered runs in Airflow 3, do not assume that ``data_interval_start`` or ``data_interval_end`` are derived from, or equal to, the supplied ``logical_date``. The resulting ``data_interval`` depends on the timetable and the trigger path, and some APIs also allow the data interval to be provided explicitly. This matters most for Dags that: - use ``data_interval_start`` or ``data_interval_end`` during manual runs - trigger downstream Dags with ``TriggerDagRunOperator`` - migrated from Airflow 2 and treated ``data_interval_start`` as the requested manual run date Migration guidance ------------------ If your Dag logic needs"
+        },
+        {
+          "rank": 2,
+          "score": 0.813011,
+          "chunk_id": "014e36509bab",
+          "source_path": "airflow-core/docs/tutorial/taskflow.rst",
+          "word_count": 200,
+          "text": "Old way: manually pull from XCom total = ti.xcom_pull(task_ids=\"transform\")[\"total_order_value\"] print(f\"Total order value is: {total:.2f}\") with DAG( dag_id=\"legacy_etl_pipeline\", schedule=None, start_date=pendulum.datetime(2021, 1, 1, tz=\"UTC\"), catchup=False, tags=[\"example\"], ) as dag: extract_task = PythonOperator(task_id=\"extract\", python_callable=extract) transform_task = PythonOperator(task_id=\"transform\", python_callable=transform) load_task = PythonOperator(task_id=\"load\", python_callable=load) extract_task >> transform_task >> load_task .. note:: This version produces the same result as the TaskFlow API example, but requires explicit management of ``XComs`` and task dependencies. The TaskFlow Way '''''''''''''''' Using TaskFlow, all of this is handled automatically. .. exampleinclude:: /../src/airflow/example_dags/tutorial_taskflow_api.py :language: python :start-after: [START tutorial] :end-before: [END tutorial] | Airflow still uses ``XComs`` and builds a dependency graph — it's just abstracted away so you can focus on your business logic. How XComs Work -------------- TaskFlow return values are stored as ``XComs`` automatically. These values can be inspected in the UI under the \"XCom\" tab. Manual ``xcom_pull()`` is still possible for traditional operators. Error Handling and Retries --------------------------- You can easily configure retries for your tasks using decorators. For example, you can set a maximum number of retries directly in the task decorator: .. code-block:: python @task(retries=3) def my_task(): ... This helps ensure that transient failures do not lead to task failure. Task Parameterization --------------------- You can reuse decorated"
+        },
+        {
+          "rank": 3,
+          "score": 0.807074,
+          "chunk_id": "1ed1393740bf",
+          "source_path": "airflow-core/docs/core-concepts/xcoms.rst",
+          "word_count": 200,
+          "text": "call would search all tasks and return the most recent value. Always specify ``task_ids`` explicitly when pulling from other tasks. XComs are a relative of :doc:`variables`, with the main difference being that XComs are per-task-instance and designed for communication within a Dag run, while Variables are global and designed for overall configuration and value sharing. If you want to push multiple XComs at once you can set ``do_xcom_push`` and ``multiple_outputs`` arguments to ``True``, and then return a dictionary of values. An example of pushing multiple XComs and pulling them individually: .. code-block:: python # A task returning a dictionary @task(do_xcom_push=True, multiple_outputs=True) def push_multiple(**context): return {\"key1\": \"value1\", \"key2\": \"value2\"} @task def xcom_pull_with_multiple_outputs(**context): # Pulling a specific key from the multiple outputs key1 = context[\"ti\"].xcom_pull(task_ids=\"push_multiple\", key=\"key1\") # to pull key1 key2 = context[\"ti\"].xcom_pull(task_ids=\"push_multiple\", key=\"key2\") # to pull key2 # Pulling entire XCom data from push_multiple task data = context[\"ti\"].xcom_pull(task_ids=\"push_multiple\", key=\"return_value\") .. note:: If the first task was not successful then on every retry task XComs will be cleared to make the task run idempotent. XComs therefore can't be used to persist state across task retries or :doc:`./sensors` poke. Object Storage XCom Backend --------------------------- The default XCom backend, BaseXCom, stores XComs in the"
+        },
+        {
+          "rank": 4,
+          "score": 0.80654,
+          "chunk_id": "aef99d4d74da",
+          "source_path": "airflow-core/docs/core-concepts/xcoms.rst",
+          "word_count": 200,
+          "text": "as the ``task_id`` and ``dag_id`` it came from. They can have any serializable value (including objects that are decorated with ``@dataclass`` or ``@attr.define``, see :ref:`TaskFlow arguments <concepts:arbitrary-arguments>`), but they are only designed for small amounts of data; do not use them to pass around large values, like dataframes. XCom operations should be performed through the Task Context using :func:`~airflow.sdk.get_current_context`. Directly updating using XCom database model is not possible. XComs are explicitly \"pushed\" and \"pulled\" to/from their storage using the ``xcom_push`` and ``xcom_pull`` methods on Task Instances. To push a value within a task called **\"task-1\"** that will be used by another task: .. code-block:: python # pushes data in any_serializable_value into XCom with key \"identifier as string\" task_instance.xcom_push(key=\"identifier as a string\", value=any_serializable_value) To pull the value that was pushed in the code above in a different task: .. code-block:: python # pulls the XCom variable with key \"identifier as string\" that was pushed from within task-1 task_instance.xcom_pull(key=\"identifier as string\", task_ids=\"task-1\") Many operators will auto-push their results into an XCom key called ``return_value`` if the ``do_xcom_push`` argument is set to ``True`` (as it is by default), and ``@task`` functions do this as well. ``xcom_pull`` defaults to using ``return_value`` as key if"
+        },
+        {
+          "rank": 5,
+          "score": 0.793729,
+          "chunk_id": "a8bf48524e7c",
+          "source_path": "airflow-core/docs/core-concepts/xcoms.rst",
+          "word_count": 200,
+          "text": "Many operators will auto-push their results into an XCom key called ``return_value`` if the ``do_xcom_push`` argument is set to ``True`` (as it is by default), and ``@task`` functions do this as well. ``xcom_pull`` defaults to using ``return_value`` as key if no key is passed to it, meaning it's possible to write code like this:: # Pulls the return_value XCOM from \"pushing_task\" value = task_instance.xcom_pull(task_ids='pushing_task') If you need to pull a value from a specific DAG run (for example, a DAG run triggered by ``TriggerDagRunOperator``), specify both ``dag_id`` and ``run_id`` explicitly:: trigger_run_id = task_instance.xcom_pull(task_ids=\"trigger_child\", key=\"trigger_run_id\") child_value = task_instance.xcom_pull( task_ids=\"child_task\", dag_id=\"child_dag\", run_id=trigger_run_id, ) The return_value key (default key with which XComs are pushed) is defined as a constant XCOM_RETURN_KEY in the :class:`~airflow.sdk.bases.xcom.BaseXCom` class and can be accessed as BaseXCom.XCOM_RETURN_KEY. You can also use XComs in :ref:`templates <concepts:jinja-templating>`:: SELECT * FROM {{ task_instance.xcom_pull(task_ids='foo', key='table_name') }} .. note:: ``xcom_pull()`` without a ``task_ids`` argument pulls only from the current task. In Airflow 2, the same call would search all tasks and return the most recent value. Always specify ``task_ids`` explicitly when pulling from other tasks. XComs are a relative of :doc:`variables`, with the main difference being that XComs are per-task-instance and designed for communication within"
+        }
+      ]
+    },
+    {
+      "id": "d003",
+      "question": "I didn't give my task a pool. Is there some pool it falls into automatically?",
+      "type": "direct",
+      "expected_source": "airflow-core/docs/administration-and-deployment/pools.rst",
+      "expected_answer": "Yes. It is assigned to `default_pool`.",
+      "hit_at_5": true,
+      "reciprocal_rank": 0.3333333333333333,
+      "retrieved": [
+        {
+          "rank": 1,
+          "score": 0.721677,
+          "chunk_id": "52d4ab63e321",
+          "source_path": "airflow-core/docs/security/audit_logs.rst",
+          "word_count": 200,
+          "text": "- ``get_task_instance_tries``: User retrieved task instance retry information - ``patch_task_instances_batch``: User modified multiple task instances **Variable operations**: - ``delete_variable``: User deleted a variable - ``patch_variable``: User modified a variable - ``post_variable``: User created a variable - ``bulk_variables``: User performed bulk variable operations **Connection operations**: - ``delete_connection``: User deleted a connection - ``post_connection``: User created a connection - ``patch_connection``: User modified a connection - ``bulk_connections``: User performed bulk connection operations - ``create_default_connections``: User created default connections **Pool operations**: - ``get_pool``: User retrieved pool information - ``get_pools``: User retrieved multiple pools - ``post_pool``: User created a pool - ``patch_pool``: User modified a pool - ``delete_pool``: User deleted a pool - ``bulk_pools``: User performed bulk pool operations **Asset operations**: - ``get_asset``: User retrieved asset information - ``get_assets``: User retrieved multiple assets - ``get_asset_alias``: User retrieved asset alias information - ``get_asset_aliases``: User retrieved multiple asset aliases - ``post_asset_events``: User created asset events - ``get_asset_events``: User retrieved asset events - ``materialize_asset``: User triggered asset materialization - ``get_asset_queued_events``: User retrieved queued asset events - ``delete_asset_queued_events``: User deleted queued asset events - ``get_dag_asset_queued_events``: User retrieved DAG asset queued events - ``delete_dag_asset_queued_events``: User deleted DAG asset queued events - ``get_dag_asset_queued_event``: User retrieved specific DAG asset queued event -"
+        },
+        {
+          "rank": 2,
+          "score": 0.706785,
+          "chunk_id": "ccd502f89d79",
+          "source_path": "airflow-core/docs/security/audit_logs.rst",
+          "word_count": 200,
+          "text": "``cli_pools_get``: Get pool information - ``cli_pools_set``: Create or update a pool - ``cli_pools_delete``: Delete a pool - ``cli_pools_list``: List all pools - ``cli_pools_import``: Import pools from file - ``cli_pools_export``: Export pools to file **Service and Process Commands**: - ``cli_webserver``: Start the Airflow webserver - ``cli_scheduler``: Start the Airflow scheduler - ``cli_worker``: Start a Celery worker - ``cli_flower``: Start Flower monitoring tool - ``cli_triggerer``: Start the triggerer process - ``cli_standalone``: Start Airflow in standalone mode - ``cli_api_server``: Start the Airflow API server - ``cli_dag_processor``: Start the DAG processor service - ``cli_celery_worker``: Start Celery worker (alternative command) - ``cli_celery_flower``: Start Celery Flower (alternative command) **Maintenance and Utility Commands**: - ``cli_cheat_sheet``: Display CLI command reference - ``cli_version``: Show Airflow version information - ``cli_info``: Display system information - ``cli_config_get_value``: Get configuration value - ``cli_config_list``: List configuration options - ``cli_plugins``: List installed plugins - ``cli_rotate_fernet_key``: Rotate Fernet encryption key - ``cli_sync_perm``: Synchronize permissions - ``cli_shell``: Start interactive Python shell - ``cli_kerberos``: Start Kerberos ticket renewer **Testing and Development Commands**: - ``cli_test``: Run tests - ``cli_render``: Render templates - ``cli_dag_deps``: Show DAG dependencies - ``cli_task_deps``: Show task dependencies **Legacy Commands**: - ``cli_run``: Legacy task run command - ``cli_backfill``: Legacy backfill command - ``cli_clear``: Legacy clear command"
+        },
+        {
+          "rank": 3,
+          "score": 0.705332,
+          "chunk_id": "d6e4cfde4f2a",
+          "source_path": "airflow-core/docs/administration-and-deployment/pools.rst",
+          "word_count": 200,
+          "text": "UI or CLI (but cannot be removed). Using multiple pool slots ------------------------- Airflow tasks will each occupy a single pool slot by default, but they can be configured to occupy more with the ``pool_slots`` argument if required. This is particularly useful when several tasks that belong to the same pool don't carry the same \"computational weight\". For instance, consider a pool with 2 slots, ``Pool(pool='maintenance', slots=2)``, and the following tasks: .. code-block:: python BashOperator( task_id=\"heavy_task\", bash_command=\"bash backup_data.sh\", pool_slots=2, pool=\"maintenance\", ) BashOperator( task_id=\"light_task1\", bash_command=\"bash check_files.sh\", pool_slots=1, pool=\"maintenance\", ) BashOperator( task_id=\"light_task2\", bash_command=\"bash remove_files.sh\", pool_slots=1, pool=\"maintenance\", ) Since the heavy task is configured to use 2 pool slots, it depletes the pool when running. Therefore, any of the light tasks must queue and wait for the heavy task to complete before they are executed. Here, in terms of resource usage, the heavy task is equivalent to two light tasks running concurrently. This implementation can prevent overwhelming system resources, which (in this example) could occur when a heavy and a light task are running concurrently. On the other hand, both light tasks can run concurrently since they only occupy one pool slot each, while the heavy task would have to wait for two pool"
+        },
+        {
+          "rank": 4,
+          "score": 0.703029,
+          "chunk_id": "a72a7d07c0dc",
+          "source_path": "airflow-core/src/airflow/models/taskinstance.py",
+          "word_count": 200,
+          "text": "Force all attributes to the values from the database if False (the default), or if True don't overwrite locally set attributes ## function: refresh_from_task Copy common attributes from the given task. :param task: The task object to copy from :param pool_override: Use the pool_override instead of task's pool :param dag_run: the DagRun this task instance belongs to, forwarded to the mutation hook so a cluster policy can route on ``dag_run.conf``; ``None`` when no run is available yet ## function: key Returns a tuple that identifies the task instance uniquely. ## function: get_dag_id Return the DAG ID for scheduler routing. ## function: get_executor_name Return the executor name for scheduler routing. ## function: set_state Set TaskInstance state. :param state: State to set for the TI :param session: SQLAlchemy ORM Session :return: Was the state changed ## function: is_premature Returns whether a task is in UP_FOR_RETRY state and its retry interval has elapsed. ## function: prepare_db_for_next_try Update the metadata with all the records needed to put this TI in queued for the next try. ## function: are_dependents_done Check whether the immediate dependents of this task instance have succeeded or have been skipped. This is meant to be used by wait_for_downstream. This is useful"
+        },
+        {
+          "rank": 5,
+          "score": 0.702965,
+          "chunk_id": "951d7f6c6ea3",
+          "source_path": "airflow-core/docs/administration-and-deployment/pools.rst",
+          "word_count": 200,
+          "text": ".. Licensed to the Apache Software Foundation (ASF) under one or more contributor license agreements. See the NOTICE file distributed with this work for additional information regarding copyright ownership. The ASF licenses this file to you under the Apache License, Version 2.0 (the \"License\"); you may not use this file except in compliance with the License. You may obtain a copy of the License at .. http://www.apache.org/licenses/LICENSE-2.0 .. Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on an \"AS IS\" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the specific language governing permissions and limitations under the License. .. _concepts:pool: Pools ===== Some systems can get overwhelmed when too many processes hit them at the same time. Airflow pools can be used to **limit the execution parallelism** on arbitrary sets of tasks. The list of pools is managed in the UI (``Menu -> Admin -> Pools``) by giving the pools a name and assigning it a number of worker slots. There you can also decide whether the pool should include :doc:`deferred tasks </authoring-and-scheduling/deferring>` in its calculation of occupied slots. Tasks can then be"
+        }
+      ]
+    },
+    {
+      "id": "d006",
+      "question": "Two tasks are sitting in the queue waiting for the same pool. What does Airflow look at when deciding what runs next?",
+      "type": "direct",
+      "expected_source": "airflow-core/docs/administration-and-deployment/pools.rst",
+      "expected_answer": "Queued tasks start based on the priority-weight of the task and its descendants.",
+      "hit_at_5": true,
+      "reciprocal_rank": 1.0,
+      "retrieved": [
+        {
+          "rank": 1,
+          "score": 0.794432,
+          "chunk_id": "d6e4cfde4f2a",
+          "source_path": "airflow-core/docs/administration-and-deployment/pools.rst",
+          "word_count": 200,
+          "text": "UI or CLI (but cannot be removed). Using multiple pool slots ------------------------- Airflow tasks will each occupy a single pool slot by default, but they can be configured to occupy more with the ``pool_slots`` argument if required. This is particularly useful when several tasks that belong to the same pool don't carry the same \"computational weight\". For instance, consider a pool with 2 slots, ``Pool(pool='maintenance', slots=2)``, and the following tasks: .. code-block:: python BashOperator( task_id=\"heavy_task\", bash_command=\"bash backup_data.sh\", pool_slots=2, pool=\"maintenance\", ) BashOperator( task_id=\"light_task1\", bash_command=\"bash check_files.sh\", pool_slots=1, pool=\"maintenance\", ) BashOperator( task_id=\"light_task2\", bash_command=\"bash remove_files.sh\", pool_slots=1, pool=\"maintenance\", ) Since the heavy task is configured to use 2 pool slots, it depletes the pool when running. Therefore, any of the light tasks must queue and wait for the heavy task to complete before they are executed. Here, in terms of resource usage, the heavy task is equivalent to two light tasks running concurrently. This implementation can prevent overwhelming system resources, which (in this example) could occur when a heavy and a light task are running concurrently. On the other hand, both light tasks can run concurrently since they only occupy one pool slot each, while the heavy task would have to wait for two pool"
+        },
+        {
+          "rank": 2,
+          "score": 0.788149,
+          "chunk_id": "c0790b6e941a",
+          "source_path": "airflow-core/docs/administration-and-deployment/pools.rst",
+          "word_count": 200,
+          "text": "Admin -> Pools``) by giving the pools a name and assigning it a number of worker slots. There you can also decide whether the pool should include :doc:`deferred tasks </authoring-and-scheduling/deferring>` in its calculation of occupied slots. Tasks can then be associated with one of the existing pools by using the ``pool`` parameter when creating tasks: .. code-block:: python aggregate_db_message_job = BashOperator( task_id=\"aggregate_db_message_job\", execution_timeout=timedelta(hours=3), pool=\"ep_data_pipeline_db_msg_agg\", bash_command=aggregate_db_message_job_cmd, dag=dag, ) aggregate_db_message_job.set_upstream(wait_for_empty_queue) Tasks will be scheduled as usual while the slots fill up. The number of slots occupied by a task can be configured by ``pool_slots`` (see section below). Once capacity is reached, runnable tasks get queued and their state will show as such in the UI. As slots free up, queued tasks start running based on the :ref:`concepts:priority-weight` of the task and its descendants. Note that if tasks are not given a pool, they are assigned to a default pool ``default_pool``, which is initialized with 128 slots and can be modified through the UI or CLI (but cannot be removed). Using multiple pool slots ------------------------- Airflow tasks will each occupy a single pool slot by default, but they can be configured to occupy more with the ``pool_slots`` argument if required. This is particularly"
+        },
+        {
+          "rank": 3,
+          "score": 0.780454,
+          "chunk_id": "dc4fa2e93fbc",
+          "source_path": "airflow-core/docs/administration-and-deployment/scheduler.rst",
+          "word_count": 200,
+          "text": "be cases where low priority tasks will be scheduled before high priority tasks if they share the same batch. For more read about that you can reference `this GitHub discussion <https://github.com/apache/airflow/discussions/28809>`__. .. _scheduler:ha: Running More Than One Scheduler ------------------------------- .. versionadded:: 2.0.0 Airflow supports running more than one scheduler concurrently -- both for performance reasons and for resiliency. Overview \"\"\"\"\"\"\"\" The :abbr:`HA (highly available)` scheduler is designed to take advantage of the existing metadata database. This was primarily done for operational simplicity: every component already has to speak to this DB, and by not using direct communication or consensus algorithm between schedulers (Raft, Paxos, etc.) nor another consensus tool (Apache Zookeeper, or Consul for instance) we have kept the \"operational surface area\" to a minimum. The scheduler now uses the serialized Dag representation to make its scheduling decisions and the rough outline of the scheduling loop is: - Check for any Dags needing a new DagRun, and create them - Examine a batch of DagRuns for schedulable TaskInstances or complete DagRuns - Select schedulable TaskInstances, and whilst respecting Pool limits and other concurrency limits, enqueue them for execution This does, however, place some requirements on the Database. .. _scheduler:ha:db_requirements: Database"
+        },
+        {
+          "rank": 4,
+          "score": 0.779327,
+          "chunk_id": "a44674acfa26",
+          "source_path": "airflow-core/docs/core-concepts/tasks.rst",
+          "word_count": 200,
+          "text": "task should flow from ``none``, to ``scheduled``, to ``queued``, to ``running``, and finally to ``success``. When any custom Task (Operator) is running, it will get a copy of the task instance passed to it; as well as being able to inspect task metadata, it also contains methods for things like :doc:`xcoms`. Relationship Terminology ~~~~~~~~~~~~~~~~~~~~~~~~ For any given Task Instance, there are two types of relationships it has with other instances. Firstly, it can have *upstream* and *downstream* tasks:: task1 >> task2 >> task3 When a Dag runs, it will create instances for each of these tasks that are upstream/downstream of each other, but which all have the same data interval. There may also be instances of the *same task*, but for different data intervals - from other runs of the same Dag. We call these *previous* and *next* - it is a different relationship to *upstream* and *downstream*! .. note:: Some older Airflow documentation may still use \"previous\" to mean \"upstream\". If you find an occurrence of this, please help us fix it! .. _concepts:timeouts: Timeouts -------- If you want a task to have a maximum runtime, set its ``execution_timeout`` attribute to a ``datetime.timedelta`` value that is the maximum permissible"
+        },
+        {
+          "rank": 5,
+          "score": 0.773273,
+          "chunk_id": "3c66ba2bc93f",
+          "source_path": "airflow-core/docs/authoring-and-scheduling/deferring.rst",
+          "word_count": 200,
+          "text": "a worker slot, and you have more free workload capacity. By default, tasks in a deferred state don't occupy pool slots. If you would like them to, you can change this by editing the pool in question. *Triggers* are small, asynchronous pieces of Python code designed to run in a single Python process. Because they are asynchronous, they can all co-exist efficiently in the *triggerer* Airflow component. .. note:: Airflow 3.2 also supports Python-native async tasks that can perform concurrent I/O operations within a single worker slot. While deferred operators release the worker slot while waiting for an external event, async tasks keep the task process running and use a shared event loop to multiplex operations. For guidance on when to use deferred operators versus async tasks, see `Deferred vs Async Operators <https://airflow.apache.org/docs/task-sdk/stable/deferred-vs-async-operators.html>`__. For guidance on when to use deferrable operators versus resumable tasks (crash-safe synchronous operators that use the task state store), see :ref:`Resumable Tasks <concepts-resumable-tasks>`. An overview of how this process works: * A task instance (running operator) reaches a point where it has to wait for other operations or conditions, and defers itself with a trigger tied to an event to resume it. This frees up the"
+        }
+      ]
+    },
+    {
+      "id": "d009",
+      "question": "Is there a way to make deferred tasks keep their pool slots?",
+      "type": "direct",
+      "expected_source": "airflow-core/docs/authoring-and-scheduling/deferring.rst",
+      "expected_answer": "Yes. The relevant pool can be edited so deferred tasks occupy slots.",
+      "hit_at_5": true,
+      "reciprocal_rank": 0.5,
+      "retrieved": [
+        {
+          "rank": 1,
+          "score": 0.778822,
+          "chunk_id": "c0790b6e941a",
+          "source_path": "airflow-core/docs/administration-and-deployment/pools.rst",
+          "word_count": 200,
+          "text": "Admin -> Pools``) by giving the pools a name and assigning it a number of worker slots. There you can also decide whether the pool should include :doc:`deferred tasks </authoring-and-scheduling/deferring>` in its calculation of occupied slots. Tasks can then be associated with one of the existing pools by using the ``pool`` parameter when creating tasks: .. code-block:: python aggregate_db_message_job = BashOperator( task_id=\"aggregate_db_message_job\", execution_timeout=timedelta(hours=3), pool=\"ep_data_pipeline_db_msg_agg\", bash_command=aggregate_db_message_job_cmd, dag=dag, ) aggregate_db_message_job.set_upstream(wait_for_empty_queue) Tasks will be scheduled as usual while the slots fill up. The number of slots occupied by a task can be configured by ``pool_slots`` (see section below). Once capacity is reached, runnable tasks get queued and their state will show as such in the UI. As slots free up, queued tasks start running based on the :ref:`concepts:priority-weight` of the task and its descendants. Note that if tasks are not given a pool, they are assigned to a default pool ``default_pool``, which is initialized with 128 slots and can be modified through the UI or CLI (but cannot be removed). Using multiple pool slots ------------------------- Airflow tasks will each occupy a single pool slot by default, but they can be configured to occupy more with the ``pool_slots`` argument if required. This is particularly"
+        },
+        {
+          "rank": 2,
+          "score": 0.777079,
+          "chunk_id": "3c66ba2bc93f",
+          "source_path": "airflow-core/docs/authoring-and-scheduling/deferring.rst",
+          "word_count": 200,
+          "text": "a worker slot, and you have more free workload capacity. By default, tasks in a deferred state don't occupy pool slots. If you would like them to, you can change this by editing the pool in question. *Triggers* are small, asynchronous pieces of Python code designed to run in a single Python process. Because they are asynchronous, they can all co-exist efficiently in the *triggerer* Airflow component. .. note:: Airflow 3.2 also supports Python-native async tasks that can perform concurrent I/O operations within a single worker slot. While deferred operators release the worker slot while waiting for an external event, async tasks keep the task process running and use a shared event loop to multiplex operations. For guidance on when to use deferred operators versus async tasks, see `Deferred vs Async Operators <https://airflow.apache.org/docs/task-sdk/stable/deferred-vs-async-operators.html>`__. For guidance on when to use deferrable operators versus resumable tasks (crash-safe synchronous operators that use the task state store), see :ref:`Resumable Tasks <concepts-resumable-tasks>`. An overview of how this process works: * A task instance (running operator) reaches a point where it has to wait for other operations or conditions, and defers itself with a trigger tied to an event to resume it. This frees up the"
+        },
+        {
+          "rank": 3,
+          "score": 0.772517,
+          "chunk_id": "f98f508788fe",
+          "source_path": "airflow-core/newsfragments/68741.bugfix.rst",
+          "word_count": 22,
+          "text": "Ignore stale executor success when a deferred task is rescheduled into QUEUED before the scheduler processes the stale SUCCESS from the worker."
+        },
+        {
+          "rank": 4,
+          "score": 0.765371,
+          "chunk_id": "a72a7d07c0dc",
+          "source_path": "airflow-core/src/airflow/models/taskinstance.py",
+          "word_count": 200,
+          "text": "Force all attributes to the values from the database if False (the default), or if True don't overwrite locally set attributes ## function: refresh_from_task Copy common attributes from the given task. :param task: The task object to copy from :param pool_override: Use the pool_override instead of task's pool :param dag_run: the DagRun this task instance belongs to, forwarded to the mutation hook so a cluster policy can route on ``dag_run.conf``; ``None`` when no run is available yet ## function: key Returns a tuple that identifies the task instance uniquely. ## function: get_dag_id Return the DAG ID for scheduler routing. ## function: get_executor_name Return the executor name for scheduler routing. ## function: set_state Set TaskInstance state. :param state: State to set for the TI :param session: SQLAlchemy ORM Session :return: Was the state changed ## function: is_premature Returns whether a task is in UP_FOR_RETRY state and its retry interval has elapsed. ## function: prepare_db_for_next_try Update the metadata with all the records needed to put this TI in queued for the next try. ## function: are_dependents_done Check whether the immediate dependents of this task instance have succeeded or have been skipped. This is meant to be used by wait_for_downstream. This is useful"
+        },
+        {
+          "rank": 5,
+          "score": 0.762639,
+          "chunk_id": "ce2b1af799a2",
+          "source_path": "airflow-core/docs/authoring-and-scheduling/deferring.rst",
+          "word_count": 200,
+          "text": "100 Dags waiting on a sensor that's currently running but idle, then you *cannot run anything else* - even though your entire Airflow cluster is essentially idle. ``reschedule`` mode for sensors solves some of this, by allowing sensors to only run at fixed intervals, but it is inflexible and only allows using time as the reason to resume, not other criteria. This is where *Deferrable Operators* can be used. When it has nothing to do but wait, an operator can suspend itself and free up the worker for other processes by *deferring*. When an operator defers, execution moves to the triggerer, where the trigger specified by the operator will run. The trigger can do the polling or waiting required by the operator. Then, when the trigger finishes polling or waiting, it sends a signal for the operator to resume its execution. During the deferred phase of execution, since work has been offloaded to the triggerer, the task no longer occupies a worker slot, and you have more free workload capacity. By default, tasks in a deferred state don't occupy pool slots. If you would like them to, you can change this by editing the pool in question. *Triggers* are small,"
+        }
+      ]
+    },
+    {
+      "id": "d012",
+      "question": "Why would dynamic task mapping be different from putting a `for` loop in the DAG file?",
+      "type": "direct",
+      "expected_source": "airflow-core/docs/authoring-and-scheduling/dynamic-task-mapping.rst",
+      "expected_answer": "A Python `for` loop runs at DAG parse time, while dynamic task mapping defers task creation until runtime.",
+      "hit_at_5": true,
+      "reciprocal_rank": 1.0,
+      "retrieved": [
+        {
+          "rank": 1,
+          "score": 0.864703,
+          "chunk_id": "52caa643862e",
+          "source_path": "airflow-core/docs/authoring-and-scheduling/dynamic-task-mapping.rst",
+          "word_count": 200,
+          "text": "is similar to defining your tasks in a for loop, but instead of having the DAG file fetch the data and do that itself, the scheduler can do this based on the output of an upstream task. Unlike a Python for-loop executed at DAG parse time, dynamic task mapping defers task creation until runtime, allowing the scheduler to determine the exact number of task instances based on upstream task outputs. Right before a mapped task is executed the scheduler will create *n* copies of the task, one for each input. It is also possible to have a task operate on the collected output of a mapped task, commonly known as map and reduce. Simple mapping ============== In its simplest form you can map over a list defined directly in your Dag file using the ``expand()`` function instead of calling your task directly. If you want to see a simple usage of Dynamic Task Mapping, you can look below: .. exampleinclude:: /../src/airflow/example_dags/example_dynamic_task_mapping.py :language: python This will show ``Total was 9`` in the task logs when executed. This is the resulting Dag structure: .. image:: /img/ui-light/mapping_simple_graph.png The grid view also provides visibility into your mapped tasks in the details panel: .. image::"
+        },
+        {
+          "rank": 2,
+          "score": 0.844107,
+          "chunk_id": "3608cbb657ae",
+          "source_path": "airflow-core/docs/authoring-and-scheduling/dynamic-task-mapping.rst",
+          "word_count": 200,
+          "text": "is not required. Although we show a \"reduce\" task here (``sum_it``) you don't have to have one, the mapped tasks will still be executed even if they have no downstream tasks. Task-generated Mapping ---------------------- The above examples we've shown could all be achieved with a ``for`` loop in the Dag file, but the real power of dynamic task mapping comes from being able to have a task generate the list to iterate over. .. code-block:: python @task def make_list(): # This can also be from an API call, checking a database, -- almost anything you like, as long as the # resulting list/dictionary can be stored in the current XCom backend. return [1, 2, {\"a\": \"b\"}, \"str\"] @task def consumer(arg): print(arg) with DAG(dag_id=\"dynamic-map\", start_date=datetime(2022, 4, 2)) as dag: consumer.expand(arg=make_list()) The ``make_list`` task runs as a normal task and must return a list or dict (see `What data types can be expanded?`_), and then the ``consumer`` task will be called four times, once with each value in the return of ``make_list``. .. warning:: Task-generated mapping cannot be utilized with ``TriggerRule.ALWAYS`` Assigning ``trigger_rule=TriggerRule.ALWAYS`` in task-generated mapping is not allowed, as expanded parameters are undefined with the task's immediate execution. This is enforced"
+        },
+        {
+          "rank": 3,
+          "score": 0.820418,
+          "chunk_id": "8d1437ff72ae",
+          "source_path": "airflow-core/docs/authoring-and-scheduling/dynamic-task-mapping.rst",
+          "word_count": 200,
+          "text": "times, once with each value in the return of ``make_list``. .. warning:: Task-generated mapping cannot be utilized with ``TriggerRule.ALWAYS`` Assigning ``trigger_rule=TriggerRule.ALWAYS`` in task-generated mapping is not allowed, as expanded parameters are undefined with the task's immediate execution. This is enforced at the time of the Dag parsing, for both tasks and mapped tasks groups, and will raise an error if you try to use it. In the recent example, setting ``trigger_rule=TriggerRule.ALWAYS`` in the ``consumer`` task will raise an error since ``make_list`` is a task-generated mapping. Repeated mapping ---------------- The result of one mapped task can also be used as input to the downstream mapped task. .. code-block:: python with DAG(dag_id=\"repeated_mapping\", start_date=datetime(2022, 3, 4)) as dag: @task def add_one(x: int): return x + 1 first = add_one.expand(x=[1, 2, 3]) second = add_one.expand(x=first) This would have a result of ``[3, 4, 5]``. Adding parameters that do not expand ------------------------------------ As well as passing arguments that get expanded at run-time, it is possible to pass arguments that don't change---in order to clearly differentiate between the two kinds we use different functions, ``expand()`` for mapped arguments, and ``partial()`` for unmapped ones. .. code-block:: python @task def add(x: int, y: int): return x + y"
+        },
+        {
+          "rank": 4,
+          "score": 0.803891,
+          "chunk_id": "0ba66fbeae1f",
+          "source_path": "airflow-core/docs/authoring-and-scheduling/dynamic-task-mapping.rst",
+          "word_count": 200,
+          "text": ".. Licensed to the Apache Software Foundation (ASF) under one or more contributor license agreements. See the NOTICE file distributed with this work for additional information regarding copyright ownership. The ASF licenses this file to you under the Apache License, Version 2.0 (the \"License\"); you may not use this file except in compliance with the License. You may obtain a copy of the License at .. http://www.apache.org/licenses/LICENSE-2.0 .. Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on an \"AS IS\" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the specific language governing permissions and limitations under the License. .. _dynamic-task-mapping: ==================== Dynamic Task Mapping ==================== Dynamic Task Mapping allows a way for a workflow to create a number of tasks at runtime based upon current data, rather than the Dag author having to know in advance how many tasks would be needed. This is similar to defining your tasks in a for loop, but instead of having the DAG file fetch the data and do that itself, the scheduler can do this based on the output of an upstream task. Unlike a Python"
+        },
+        {
+          "rank": 5,
+          "score": 0.803264,
+          "chunk_id": "ce9475cbd540",
+          "source_path": "airflow-core/docs/core-concepts/dags.rst",
+          "word_count": 200,
+          "text": "see main article :doc:`/howto/setup-and-teardown` for details on how to use this feature. Dynamic Dags ------------ Since a Dag is defined by Python code, there is no need for it to be purely declarative; you are free to use loops, functions, and more to define your Dag. For example, here is a Dag that uses a ``for`` loop to define some tasks: .. code-block:: python :emphasize-lines: 7 with DAG(\"loop_example\", ...): first = EmptyOperator(task_id=\"first\") last = EmptyOperator(task_id=\"last\") options = [\"branch_a\", \"branch_b\", \"branch_c\", \"branch_d\"] for option in options: t = EmptyOperator(task_id=option) first >> t >> last In general, we advise you to try and keep the *topology* (the layout) of your Dag tasks relatively stable; dynamic Dags are usually better used for dynamically loading configuration options or changing operator options. Dag Visualization ----------------- If you want to see a visual representation of a Dag, you have two options: * You can load up the Airflow UI, navigate to your Dag, and select \"Graph\" * You can run ``airflow dags show``, which renders it out as an image file We generally recommend you use the Graph view, as it will also show you the state of all the :ref:`Task Instances <concepts:task-instances>` within any Dag"
+        }
+      ]
+    },
+    {
+      "id": "d015",
+      "question": "Does a backfill have to obey the DAG's `max_active_runs`, or can it have its own limit?",
+      "type": "direct",
+      "expected_source": "airflow-core/docs/core-concepts/backfill.rst",
+      "expected_answer": "A backfill can set `max_active_runs` independently of the DAG's `max_active_runs` setting.",
+      "hit_at_5": true,
+      "reciprocal_rank": 1.0,
+      "retrieved": [
+        {
+          "rank": 1,
+          "score": 0.862289,
+          "chunk_id": "19ebddd0ece3",
+          "source_path": "airflow-core/docs/core-concepts/backfill.rst",
+          "word_count": 200,
+          "text": "range according to the Dag's schedule. Backfill does not make sense for Dags that don't have a time-based schedule. Control over data reprocessing ------------------------------ There are three options for reprocessing behavior: * **none** - if there's already a run for this logical date, do not create another, no matter the state * **failed** - if a run exists, if the state is failed, create a new run for this date * **completed** - if a run exists, if the state is completed or failed, create a new run for this date If the latest run is still running or is queued, we do not create another run, no matter the chosen reprocessing behavior. Concurrency control ------------------- You can set ``max_active_runs`` on a backfill and it will control how many Dag runs in the backfill can run concurrently. Backfill ``max_active_runs`` is applied independently of the Dag ``max_active_runs`` setting. Once a backfill's Dag runs are actually running, the scheduler does not otherwise deprioritize their task scheduling relative to other running Dag runs. ``max_active_runs`` is therefore the primary lever for controlling how much of your scheduling capacity a backfill consumes at once — lower it to leave more room for time-sensitive scheduled work"
+        },
+        {
+          "rank": 2,
+          "score": 0.861117,
+          "chunk_id": "440fa4fd78fb",
+          "source_path": "airflow-core/docs/core-concepts/backfill.rst",
+          "word_count": 200,
+          "text": "deprioritize their task scheduling relative to other running Dag runs. ``max_active_runs`` is therefore the primary lever for controlling how much of your scheduling capacity a backfill consumes at once — lower it to leave more room for time-sensitive scheduled work while the backfill is in progress. Run ordering ------------ You can run your backfill in reverse, i.e. latest runs first. The CLI option is ``--run-backwards``. Dry run ------- Backfill dry run is a CLI option that will print out the dates that the backfill will consider creating runs for. Whether or not they will be created depends on your chosen reprocessing behavior and the states of any existing runs in the range at the time you actually run the backfill. Example ------- Backfill can be created from either the CLI or the UI. For CLI, below is an example command: .. code-block:: bash airflow backfill create --dag-id tutorial \\ --from-date 2015-06-01 \\ --to-date 2015-06-07 \\ --reprocess-behavior failed \\ --max-active-runs 3 \\ --run-backwards \\ --dag-run-conf '{\"my\": \"param\"}' For UI, follow the following steps: 1. Navigate to a Dag's Details page and click **Trigger**. 2. In the pop-up window, select **Backfill**. 3. Fill in the form: - **Date range**: set \"From\" and"
+        },
+        {
+          "rank": 3,
+          "score": 0.824112,
+          "chunk_id": "c988638228c2",
+          "source_path": "airflow-core/docs/core-concepts/backfill.rst",
+          "word_count": 195,
+          "text": "\\ --run-backwards \\ --dag-run-conf '{\"my\": \"param\"}' For UI, follow the following steps: 1. Navigate to a Dag's Details page and click **Trigger**. 2. In the pop-up window, select **Backfill**. 3. Fill in the form: - **Date range**: set \"From\" and \"To\" logical datetimes for the backfill window. - **Reprocess behavior**: choose one of ``Missing Runs``, ``Missing and Errored Runs``, or ``All Runs``. - **Max active runs**: limit concurrent backfill runs for this backfill. - **Run backwards**: execute most recent intervals first. - **Advanced Config**: optionally provide JSON ``dag_run.conf``. - If the Dag is paused, you can **Unpause** it in the same window. .. image:: ../img/ui-light/backfill.png :alt: Backfill pop-up window (Light Mode) Partitioned Dag backfills ------------------------- For Dags that use a partition-based timetable (e.g. ``CronPartitionTimetable``), the same ``--from-date`` / ``--to-date`` flags are used for all backfills. Airflow automatically detects whether the Dag is partitioned and interprets the date range as a partition-date range accordingly — one Dag run is created per partition within the window. Example: backfill the partitions from 2026-02-18 to 2026-02-20:: airflow backfill create --dag-id my_partitioned_dag \\ --from-date 2026-02-18 \\ --to-date 2026-02-20 Concurrency is controlled by the same ``--max-active-runs`` option used for all backfills."
+        },
+        {
+          "rank": 4,
+          "score": 0.809626,
+          "chunk_id": "6452a6e6f565",
+          "source_path": "airflow-core/docs/core-concepts/dag-run.rst",
+          "word_count": 200,
+          "text": "Advanced Config. .. image:: ../img/ui-light/backfill.png :alt: Backfill pop-up window (Light Mode) CLI ''' For CLI usage, run the command below: .. code-block:: bash airflow backfill create --dag-id DAG_ID \\ --from-date START_DATE \\ --to-date END_DATE \\ --reprocess-behavior failed \\ --max-active-runs 3 \\ --run-backwards \\ --dag-run-conf '{\"my\": \"param\"}' The `backfill command <../cli-and-env-variables-ref.html#backfill>`_ will re-run all the instances of the dag_id for all the intervals within the start date and end date. Re-run Tasks ------------ Some of the tasks can fail during the scheduled run. Once you have fixed the errors after going through the logs, you can re-run the tasks by clearing them for the scheduled date. Clearing a task instance creates a record of the task instance. The ``try_number`` of the current task instance is incremented, the ``max_tries`` set to ``0`` and the state set to ``None``, which causes the task to re-run. An experimental feature in Airflow 3.1.0 allows you to clear the task instances and re-run with the latest bundle version. Click on the failed task in the Tree or Graph views and then click on **Clear**. The executor will re-run it. There are multiple options you can select to re-run - * **Past** - All the instances of"
+        },
+        {
+          "rank": 5,
+          "score": 0.796069,
+          "chunk_id": "5f5aa5b3dbfc",
+          "source_path": "airflow-core/src/airflow/models/backfill.py",
+          "word_count": 117,
+          "text": "runs for the given date range. This happens when the from/to date range falls entirely outside the Dag's scheduled intervals (e.g. the range predates the first partition boundary). :meta private: ## class: UnknownActiveBackfills Raised when the quantity of active backfills cannot be determined. :meta private: ## class: ReprocessBehavior Internal enum for setting reprocess behavior in a backfill. :meta private: ## class: Backfill Model representing a backfill job. ## class: BackfillDagRunExceptionReason Enum for storing reasons why Dag run not created. :meta private: ## class: BackfillDagRun Mapping table between backfill run and Dag run. ## function: _handle_clear_run Clear the existing Dag run and update backfill metadata. ## function: _cleanup_partial_backfill Best-effort removal of a partially-created backfill after a lock error."
+        }
+      ]
+    },
+    {
+      "id": "d022",
+      "question": "For Slack, what kind of credential is the connection expecting?",
+      "type": "direct",
+      "expected_source": "providers/slack/docs/connections/slack.rst",
+      "expected_answer": "A Slack API token.",
+      "hit_at_5": true,
+      "reciprocal_rank": 1.0,
+      "retrieved": [
+        {
+          "rank": 1,
+          "score": 0.773928,
+          "chunk_id": "c584de57efd5",
+          "source_path": "providers/slack/docs/connections/slack.rst",
+          "word_count": 200,
+          "text": ".. Licensed to the Apache Software Foundation (ASF) under one or more contributor license agreements. See the NOTICE file distributed with this work for additional information regarding copyright ownership. The ASF licenses this file to you under the Apache License, Version 2.0 (the \"License\"); you may not use this file except in compliance with the License. You may obtain a copy of the License at .. http://www.apache.org/licenses/LICENSE-2.0 .. Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on an \"AS IS\" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the specific language governing permissions and limitations under the License. .. _howto/connection:slack: Slack API Connection ==================== The Slack connection type enables Slack API Integrations. Authenticating to Slack ----------------------- Authenticate to Slack using a `Slack API token <https://slack.com/help/articles/215770388-Create-and-regenerate-API-tokens>`_. Default Connection ID ---------------------- The default Slack API Connection ID is ``slack_api_default``. Configuring the Connection -------------------------- Password Specify the Slack API token. Extra (optional) Specify the extra parameters (as json dictionary) that can be used in slack_sdk.WebClient. All parameters are optional. * ``timeout``: The maximum number of seconds the client will wait to connect and receive a response"
+        },
+        {
+          "rank": 2,
+          "score": 0.766155,
+          "chunk_id": "cdecef6de97b",
+          "source_path": "providers/slack/docs/connections/slack-incoming-webhook.rst",
+          "word_count": 200,
+          "text": ".. Licensed to the Apache Software Foundation (ASF) under one or more contributor license agreements. See the NOTICE file distributed with this work for additional information regarding copyright ownership. The ASF licenses this file to you under the Apache License, Version 2.0 (the \"License\"); you may not use this file except in compliance with the License. You may obtain a copy of the License at .. http://www.apache.org/licenses/LICENSE-2.0 .. Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on an \"AS IS\" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the specific language governing permissions and limitations under the License. .. _howto/connection:slackwebhook: Slack Incoming Webhook Connection ================================= The Slack Incoming Webhook connection type enables `Slack Incoming Webhooks <https://api.slack.com/messaging/webhooks>`_ Integrations. Authenticating to Slack ----------------------- Authenticate to Slack using a `Incoming Webhook URL <https://api.slack.com/messaging/webhooks#getting_started>`_. Default Connection IDs ---------------------- .. warning:: The :class:`airflow.providers.slack.hooks.slack_webhook.SlackWebhookHook` and community provided operators not intend to use any Slack Incoming Webhook Connection by default right now. It might change in the future to ``slack_default``. Configuring the Connection -------------------------- Schema Optional. Http schema, if not specified than **https** is used. Slack Webhook Endpoint (Host) Optional."
+        },
+        {
+          "rank": 3,
+          "score": 0.763464,
+          "chunk_id": "649323e1f5a2",
+          "source_path": "providers/slack/docs/connections/slack.rst",
+          "word_count": 135,
+          "text": "the Slack API token. Extra (optional) Specify the extra parameters (as json dictionary) that can be used in slack_sdk.WebClient. All parameters are optional. * ``timeout``: The maximum number of seconds the client will wait to connect and receive a response from Slack API. * ``base_url``: A string representing the Slack API base URL. * ``proxy``: Proxy to make the Slack API call. If you are configuring the connection via a URI, ensure that all components of the URI are URL-encoded. Examples -------- **Set Slack API Connection as Environment Variable (URI)** .. code-block:: bash export AIRFLOW_CONN_SLACK_API_DEFAULT='slack://:[REDACTED-EXAMPLE-SLACK-TOKEN]@/?timeout=42' **Snippet for create Connection as URI**: .. code-block:: python from airflow.models.connection import Connection conn = Connection( conn_id=\"slack_api_default\", conn_type=\"slack\", password=\"[REDACTED-EXAMPLE-SLACK-TOKEN]\", extra={ # Specify extra parameters here \"timeout\": \"42\", }, ) # Generate Environment Variable Name env_key = f\"AIRFLOW_CONN_{conn.conn_id.upper()}\" print(f\"{env_key}='{conn.get_uri()}'\") # AIRFLOW_CONN_SLACK_API_DEFAULT='slack://:[REDACTED-EXAMPLE-SLACK-TOKEN]@/?timeout=42'"
+        },
+        {
+          "rank": 4,
+          "score": 0.76288,
+          "chunk_id": "db43762e6158",
+          "source_path": "providers/slack/docs/changelog.rst",
+          "word_count": 200,
+          "text": "mention user see: `Slack Documentation <https://api.slack.com/reference/surfaces/formatting#mentioning-users>`__. Removed deprecated parameters ``endpoint``, ``method``, ``data``, ``headers``, ``response_check``, ``response_filter``, ``extra_options``, ``log_response``, ``auth_type``, ``tcp_keep_alive``, ``tcp_keep_alive_idle``, ``tcp_keep_alive_idle``, ``tcp_keep_alive_count``, ``tcp_keep_alive_interval`` from the ``SlackWebhookOperator``. Those parameters has no affect in the past, you should not provide it. * ``Remove deprecated parts from Slack provider (#33557)`` * ``Replace deprecated slack notification in provider.yaml with new one (#33643)`` Misc ~~~~ * ``Avoid importing pandas and numpy in runtime and module level (#33483)`` * ``Consolidate import and usage of pandas (#33480)`` 7.3.2 ..... Misc ~~~~ * ``Add more accurate typing for DbApiHook.run method (#31846)`` .. Below changes are excluded from the changelog. Move them to appropriate section above if needed. Do not delete the lines(!): * ``Prepare docs for July 2023 wave of Providers (RC2) (#32381)`` * ``D205 Support - Providers: Pagerduty to SMTP (inclusive) (#32358)`` * ``Remove spurious headers for provider changelogs (#32373)`` * ``Prepare docs for July 2023 wave of Providers (#32298)`` * ``Improve provider documentation and README structure (#32125)`` 7.3.1 ..... .. note:: This release dropped support for Python 3.7 Misc ~~~~ * ``Remove Python 3.7 support (#30963)`` .. Below changes are excluded from the changelog. Move them to appropriate section above if needed. Do not delete the"
+        },
+        {
+          "rank": 5,
+          "score": 0.7521,
+          "chunk_id": "dcb1d78d8bba",
+          "source_path": "providers/slack/docs/changelog.rst",
+          "word_count": 200,
+          "text": "use 'slack_sdk' instead of HttpHook methods (#26452)`` Features ~~~~~~~~ * ``Move send_file method into SlackHook (#26118)`` * ``Refactor Slack API Hook and add Connection (#25852)`` * ``Remove unsafe imports in Slack API Connection (#26459)`` * ``Add common-sql lower bound for common-sql (#25789)`` * ``Fix Slack Connections created in the UI (#26845)`` .. Below changes are excluded from the changelog. Move them to appropriate section above if needed. Do not delete the lines(!): * ``Apply PEP-563 (Postponed Evaluation of Annotations) to non-core airflow (#26289)`` * ``Replace SQL with Common SQL in pre commit (#26058)`` * ``Prepare docs for new providers release (August 2022) (#25618)`` * ``AIP-47 - Migrate Slack DAG to new design (#25137)`` * ``Fix errors in CHANGELOGS for slack and amazon (#26746)`` * ``Update docs for September Provider's release (#26731)`` 5.1.0 ..... Features ~~~~~~~~ * ``Move all SQL classes to common-sql provider (#24836)`` * ``Adding generic 'SqlToSlackOperator' (#24663)`` .. Below changes are excluded from the changelog. Move them to appropriate section above if needed. Do not delete the lines(!): * ``Update docstring in 'SqlToSlackOperator' (#24759)`` * ``Move provider dependencies to inside provider folders (#24672)`` * ``Remove 'hook-class-names' from provider.yaml (#24702)`` 5.0.0 ..... Breaking changes ~~~~~~~~~~~~~~~~ .. note:: This release"
+        }
+      ]
+    },
+    {
+      "id": "d024",
+      "question": "What does the AWS connection test actually prove?",
+      "type": "direct",
+      "expected_source": "providers/amazon/docs/connections/aws.rst",
+      "expected_answer": "It can check whether the credentials are valid by invoking AWS STS `GetCallerIdentity`, but it cannot verify access to a particular AWS service.",
+      "hit_at_5": true,
+      "reciprocal_rank": 1.0,
+      "retrieved": [
+        {
+          "rank": 1,
+          "score": 0.782103,
+          "chunk_id": "5fb367b1c340",
+          "source_path": "providers/amazon/docs/connections/aws.rst",
+          "word_count": 200,
+          "text": "test. During this test components of Amazon Provider invoke AWS Security Token Service API `GetCallerIdentity <https://docs.aws.amazon.com/STS/latest/APIReference/API_GetCallerIdentity.html>`__. This service can **only** check if your credentials are valid. Unfortunately it is not possible to validate if credentials have access to specific AWS service or not. If you use the Amazon Provider to communicate with AWS API compatible services (MinIO, LocalStack, etc.) test connection failure **doesn't mean** that your connection has wrong credentials. Many compatible services provide only a limited number of AWS API services, and most of them do not implement the AWS STS GetCallerIdentity method. Authenticating to AWS --------------------- Authentication may be performed using any of the options described in Boto3 Guide :external+boto3:ref:`guide_credentials`. Alternatively, one can pass credentials in as a Connection initialisation parameter. To use IAM instance profile, create an \"empty\" connection (i.e. one with no AWS Access Key ID or AWS Secret Access Key specified, or ``aws://``). Default Connection IDs ----------------------- The default connection ID is ``aws_default``. If the environment/machine where you are running Airflow has the file credentials in ``${HOME}/.aws/``, and the default connection has user and pass fields empty, it will take automatically the credentials from there. .. important:: Previously, the ``aws_default`` connection had the \"extras\" field"
+        },
+        {
+          "rank": 2,
+          "score": 0.777502,
+          "chunk_id": "1cae2d7c00f0",
+          "source_path": "providers/amazon/docs/changelog.rst",
+          "word_count": 200,
+          "text": "that it was always an alias to AWS connection ``conn_type=\"aws\"`` In practice the only impact is you won't be able to ``test`` the connection in the web UI / API. In order to restore ability to test connection you need to change connection type from **Amazon S3** (``conn_type=\"s3\"``) to **Amazon Web Services** (``conn_type=\"aws\"``) manually. * ``Remove Amazon S3 Connection Type (#25980)`` Features ~~~~~~~~ * ``Add RdsDbSensor to amazon provider package (#26003)`` * ``Set template_fields on RDS operators (#26005)`` * ``Auto tail file logs in Web UI (#26169)`` Bug Fixes ~~~~~~~~~ * ``Fix SageMakerEndpointConfigOperator's return value (#26541)`` * ``EMR Serverless Fix for Jobs marked as success even on failure (#26218)`` * ``Fix AWS Connection warn condition for invalid 'profile_name' argument (#26464)`` * ``Athena and EMR operator max_retries mix-up fix (#25971)`` * ``Fixes SageMaker operator return values (#23628)`` * ``Remove redundant catch exception in Amazon Log Task Handlers (#26442)`` Misc ~~~~ * ``Remove duplicated connection-type within the provider (#26628)`` .. Below changes are excluded from the changelog. Move them to appropriate section above if needed. Do not delete the lines(!): * ``Redshift to S3 and S3 to Redshift System test (AIP-47) (#26613)`` * ``Convert example_eks_with_fargate_in_one_step.py and example_eks_with_fargate_profile to AIP-47 (#26537)`` * ``Redshift"
+        },
+        {
+          "rank": 3,
+          "score": 0.770063,
+          "chunk_id": "a829a365f1f7",
+          "source_path": "providers/amazon/docs/changelog.rst",
+          "word_count": 200,
+          "text": "``Allow AWS Secrets Backends use AWS Connection capabilities (#25628)`` * ``Implement 'EmrEksCreateClusterOperator' (#25816)`` * ``Improve error handling/messaging around bucket exist check (#25805)`` Bug Fixes ~~~~~~~~~ * ``Fix display aws connection info (#26025)`` * ``Fix 'EcsBaseOperator' and 'EcsBaseSensor' arguments (#25989)`` * ``Fix RDS system test (#25839)`` * ``Avoid circular import problems when instantiating AWS SM backend (#25810)`` * ``fix bug construction of Connection object in version 5.0.0rc3 (#25716)`` .. Below changes are excluded from the changelog. Move them to appropriate section above if needed. Do not delete the lines(!): * ``Fix EMR serverless system test (#25969)`` * ``Add 'output' property to MappedOperator (#25604)`` * ``Add Airflow specific warning classes (#25799)`` * ``Replace SQL with Common SQL in pre commit (#26058)`` * ``Hook into Mypy to get rid of those cast() (#26023)`` * ``Raise an error on create bucket if use regional endpoint for us-east-1 and region not set (#25945)`` * ``Update AWS system tests to use SystemTestContextBuilder (#25748)`` * ``Convert Quicksight Sample DAG to System Test (#25696)`` * ``Consolidate to one 'schedule' param (#25410)`` 5.0.0 ..... Breaking changes ~~~~~~~~~~~~~~~~ * ``Avoid requirement that AWS Secret Manager JSON values be urlencoded. (#25432)`` * ``Remove deprecated modules (#25543)`` * ``Resolve Amazon Hook's 'region_name'"
+        },
+        {
+          "rank": 4,
+          "score": 0.759129,
+          "chunk_id": "4caf99f02744",
+          "source_path": "airflow-core/docs/howto/connection.rst",
+          "word_count": 200,
+          "text": "your webserver. .. note:: If webserver & worker machines (if testing via the Airflow UI) or machines/pods (if testing via the Airflow CLI) have different libs or providers installed, test results *might* differ. Asynchronous (worker-dispatched) connection testing ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ The test described above runs on the API server. Airflow can also run the test on a worker instead, so that connection credentials are only ever used on a worker -- the same place your tasks use them -- rather than on the API server. This is useful when a connection is only reachable from workers, or when you would rather not have credentials exercised on the API server. This uses the same ``[core] test_connection`` enablement flag as the synchronous test and is driven through the :doc:`Connections REST API </stable-rest-api-ref/>`: submit a test with ``POST /connections/enqueue-test`` (which returns a token), then poll for the result with ``GET /connections/enqueue-test``, passing the token in the ``Airflow-Connection-Test-Token`` header. A result can only be read back with that token, and only by users authorized for the connection; in multi-team deployments a test for a connection owned by another team is not visible to you. The worker that runs the test is authorized separately from the polling"
+        },
+        {
+          "rank": 5,
+          "score": 0.753367,
+          "chunk_id": "b14286cc70e4",
+          "source_path": "providers/amazon/docs/changelog.rst",
+          "word_count": 200,
+          "text": "bug in SqlToS3Operator in non parquet formats (#26676)`` * ``Sagemaker hook: remove extra call at the end when waiting for completion (#27551)`` * ``ECS Buglette (#26921)`` * ``Avoid circular imports in AWS Secrets Backends if obtain secrets from config (#26784)`` .. Below changes are excluded from the changelog. Move them to appropriate section above if needed. Do not delete the lines(!): * ``sagemaker operators: mutualize init of aws_conn_id (#27579)`` * ``Upgrade dependencies in order to avoid backtracking (#27531)`` * ``Code quality improvements on sagemaker operators/hook (#27453)`` * ``Update old style typing (#26872)`` * ``System test for SQL to S3 Transfer (AIP-47) (#27097)`` * ``Enable string normalization in python formatting - providers (#27205)`` * ``Convert emr_eks example dag to system test (#26723)`` * ``System test for Dynamo DB (#26729)`` * ``ECS System Test (#26808)`` * ``RDS Instance System Tests (#26733)`` 6.0.0 ..... Breaking changes ~~~~~~~~~~~~~~~~ .. warning:: In this version of provider Amazon S3 Connection (``conn_type=\"s3\"``) removed due to the fact that it was always an alias to AWS connection ``conn_type=\"aws\"`` In practice the only impact is you won't be able to ``test`` the connection in the web UI / API. In order to restore ability to test connection you need"
+        }
+      ]
+    },
+    {
+      "id": "s030",
+      "question": "If I give a task no pool, and it ends up competing with other queued work, what two defaults should I know about?",
+      "type": "synthesis",
+      "expected_source": [
+        "airflow-core/docs/administration-and-deployment/pools.rst",
+        "airflow-core/docs/administration-and-deployment/priority-weight.rst"
+      ],
+      "expected_answer": "It goes into `default_pool`, which starts with 128 slots. The default priority_weight is 1 and the default weighting method is downstream.",
+      "hit_at_5": true,
+      "reciprocal_rank": 1.0,
+      "retrieved": [
+        {
+          "rank": 1,
+          "score": 0.778043,
+          "chunk_id": "c0790b6e941a",
+          "source_path": "airflow-core/docs/administration-and-deployment/pools.rst",
+          "word_count": 200,
+          "text": "Admin -> Pools``) by giving the pools a name and assigning it a number of worker slots. There you can also decide whether the pool should include :doc:`deferred tasks </authoring-and-scheduling/deferring>` in its calculation of occupied slots. Tasks can then be associated with one of the existing pools by using the ``pool`` parameter when creating tasks: .. code-block:: python aggregate_db_message_job = BashOperator( task_id=\"aggregate_db_message_job\", execution_timeout=timedelta(hours=3), pool=\"ep_data_pipeline_db_msg_agg\", bash_command=aggregate_db_message_job_cmd, dag=dag, ) aggregate_db_message_job.set_upstream(wait_for_empty_queue) Tasks will be scheduled as usual while the slots fill up. The number of slots occupied by a task can be configured by ``pool_slots`` (see section below). Once capacity is reached, runnable tasks get queued and their state will show as such in the UI. As slots free up, queued tasks start running based on the :ref:`concepts:priority-weight` of the task and its descendants. Note that if tasks are not given a pool, they are assigned to a default pool ``default_pool``, which is initialized with 128 slots and can be modified through the UI or CLI (but cannot be removed). Using multiple pool slots ------------------------- Airflow tasks will each occupy a single pool slot by default, but they can be configured to occupy more with the ``pool_slots`` argument if required. This is particularly"
+        },
+        {
+          "rank": 2,
+          "score": 0.767026,
+          "chunk_id": "52d4ab63e321",
+          "source_path": "airflow-core/docs/security/audit_logs.rst",
+          "word_count": 200,
+          "text": "- ``get_task_instance_tries``: User retrieved task instance retry information - ``patch_task_instances_batch``: User modified multiple task instances **Variable operations**: - ``delete_variable``: User deleted a variable - ``patch_variable``: User modified a variable - ``post_variable``: User created a variable - ``bulk_variables``: User performed bulk variable operations **Connection operations**: - ``delete_connection``: User deleted a connection - ``post_connection``: User created a connection - ``patch_connection``: User modified a connection - ``bulk_connections``: User performed bulk connection operations - ``create_default_connections``: User created default connections **Pool operations**: - ``get_pool``: User retrieved pool information - ``get_pools``: User retrieved multiple pools - ``post_pool``: User created a pool - ``patch_pool``: User modified a pool - ``delete_pool``: User deleted a pool - ``bulk_pools``: User performed bulk pool operations **Asset operations**: - ``get_asset``: User retrieved asset information - ``get_assets``: User retrieved multiple assets - ``get_asset_alias``: User retrieved asset alias information - ``get_asset_aliases``: User retrieved multiple asset aliases - ``post_asset_events``: User created asset events - ``get_asset_events``: User retrieved asset events - ``materialize_asset``: User triggered asset materialization - ``get_asset_queued_events``: User retrieved queued asset events - ``delete_asset_queued_events``: User deleted queued asset events - ``get_dag_asset_queued_events``: User retrieved DAG asset queued events - ``delete_dag_asset_queued_events``: User deleted DAG asset queued events - ``get_dag_asset_queued_event``: User retrieved specific DAG asset queued event -"
+        },
+        {
+          "rank": 3,
+          "score": 0.765564,
+          "chunk_id": "c04ad3a4ff62",
+          "source_path": "airflow-core/docs/administration-and-deployment/scheduler.rst",
+          "word_count": 200,
+          "text": "could also lead to one scheduler taking all the Dag runs leaving no work for the others. - :ref:`config:scheduler__use_row_level_locking` Should the scheduler issue ``SELECT ... FOR UPDATE`` in relevant queries. If this is set to False then you should not run more than a single scheduler at once. - :ref:`config:scheduler__pool_metrics_interval` How often (in seconds) should pool usage stats be sent to StatsD (if statsd_on is enabled). This is a *relatively* expensive query to compute this, so this should be set to match the same period as your StatsD roll-up period. - :ref:`config:scheduler__ti_metrics_interval` How often (in seconds) should task instance (scheduled, queued, running and deferred) stats be sent to StatsD (if statsd_on is enabled). This is a *relatively* expensive query to compute this, so this should be set to match the same period as your StatsD roll-up period. - :ref:`config:scheduler__orphaned_tasks_check_interval` How often (in seconds) should the scheduler check for orphaned tasks or dead SchedulerJobs. This setting controls how a dead scheduler will be noticed and the tasks it was \"supervising\" get picked up by another scheduler. The tasks will stay running, so there is no harm in not detecting this for a while. When a SchedulerJob is detected as \"dead\" (as"
+        },
+        {
+          "rank": 4,
+          "score": 0.759261,
+          "chunk_id": "e93498f108fc",
+          "source_path": "airflow-core/docs/core-concepts/tasks.rst",
+          "word_count": 200,
+          "text": "* ``running``: The task is running on a worker (or on a local/synchronous executor) * ``success``: The task finished running without errors * ``restarting``: The task was externally requested to restart when it was running * ``failed``: The task had an error during execution and failed to run * ``skipped``: The task was skipped due to branching, LatestOnly, or similar. * ``upstream_failed``: An upstream task failed and the :ref:`Trigger Rule <concepts:trigger-rules>` says we needed it * ``up_for_retry``: The task failed, but has retry attempts left and will be rescheduled. * ``up_for_reschedule``: The task is a :doc:`Sensor <sensors>` that is in ``reschedule`` mode * ``deferred``: The task has been :doc:`deferred to a trigger <../authoring-and-scheduling/deferring>` * ``awaiting_input``: The task is a :doc:`Human-in-the-loop <../tutorial/hitl>` task waiting for a human response. It is managed by the scheduler and uses neither a worker slot nor the triggerer. * ``removed``: The task has vanished from the Dag since the run started .. image:: /img/diagram_task_lifecycle.png Ideally, a task should flow from ``none``, to ``scheduled``, to ``queued``, to ``running``, and finally to ``success``. When any custom Task (Operator) is running, it will get a copy of the task instance passed to it; as well as being able to"
+        },
+        {
+          "rank": 5,
+          "score": 0.754639,
+          "chunk_id": "f98f508788fe",
+          "source_path": "airflow-core/newsfragments/68741.bugfix.rst",
+          "word_count": 22,
+          "text": "Ignore stale executor success when a deferred task is rescheduled into QUEUED before the scheduler processes the stale SUCCESS from the worker."
+        }
+      ]
+    },
+    {
+      "id": "s034",
+      "question": "Why is an environment variable preferred for something read while the DAG is being parsed, even though Airflow also has Variables?",
+      "type": "direct",
+      "expected_source": "airflow-core/docs/howto/dynamic-dag-generation.rst",
+      "expected_answer": "Top-level Airflow Variable access requires a metadata DB lookup and can slow parsing and add DB load.",
+      "hit_at_5": true,
+      "reciprocal_rank": 0.5,
+      "retrieved": [
+        {
+          "rank": 1,
+          "score": 0.843626,
+          "chunk_id": "fca2825a621c",
+          "source_path": "airflow-core/docs/howto/variable.rst",
+          "word_count": 200,
+          "text": "../img/ui-dark/variable_hidden.png See the :doc:`Variables Concepts </core-concepts/variables>` documentation for more information. Storing Variables in Environment Variables ------------------------------------------ .. versionadded:: 1.10.10 Airflow Variables can also be created and managed using Environment Variables. The environment variable naming convention is :envvar:`AIRFLOW_VAR_{VARIABLE_NAME}`, all uppercase. So if your variable key is ``foo`` then the variable name should be ``AIRFLOW_VAR_FOO``. For example, .. code-block:: bash export AIRFLOW_VAR_FOO=BAR # To use JSON, store them as JSON strings export AIRFLOW_VAR_FOO_BAZ='{\"hello\":\"world\"}' You can use them in your Dags as: .. code-block:: python from airflow.sdk import Variable foo = Variable.get(\"foo\") foo_json = Variable.get(\"foo_baz\", deserialize_json=True) .. note:: Single underscores surround ``VAR``. This is in contrast with the way ``airflow.cfg`` parameters are stored, where double underscores surround the config section name. Variables set using Environment Variables will also take precedence over variables defined in the Airflow UI. Visibility in UI and CLI ^^^^^^^^^^^^^^^^^^^^^^^^^ Variables defined through environment variables are **not displayed** in the Airflow UI or listed using ``airflow variables list``. This is because these variables are **resolved dynamically at runtime**, typically on the **worker** process executing your task. They are not stored in the metadata database or loaded in the webserver or scheduler environment. This supports secure deployment patterns where environment-based secrets"
+        },
+        {
+          "rank": 2,
+          "score": 0.824096,
+          "chunk_id": "caf05a2abe98",
+          "source_path": "airflow-core/docs/howto/dynamic-dag-generation.rst",
+          "word_count": 200,
+          "text": "the DB. See :ref:`best practices on Airflow Variables <best_practices/airflow_variables>` to make the best use of Airflow Variables in your Dags using Jinja templates. For example you could set ``DEPLOYMENT`` variable differently for your production and development environments. The variable ``DEPLOYMENT`` could be set to ``PROD`` in your production environment and to ``DEV`` in your development environment. Then you could build your Dag differently in production and development environment, depending on the value of the environment variable. .. code-block:: python deployment = os.environ.get(\"DEPLOYMENT\", \"PROD\") if deployment == \"PROD\": task = Operator(param=\"prod-param\") elif deployment == \"DEV\": task = Operator(param=\"dev-param\") Generating Python code with embedded meta-data .............................................. You can externally generate Python code containing the meta-data as importable constants. Such constant can then be imported directly by your Dag and used to construct the object and build the dependencies. This makes it easy to import such code from multiple Dags without the need to find, load and parse the meta-data stored in the constant - this is done automatically by Python interpreter when it processes the \"import\" statement. This sounds strange at first, but it is surprisingly easy to generate such code and make sure this is a valid Python code that you"
+        },
+        {
+          "rank": 3,
+          "score": 0.811521,
+          "chunk_id": "e1b712f00f0c",
+          "source_path": "airflow-core/docs/cli-and-env-variables-ref.rst",
+          "word_count": 114,
+          "text": "of environment variable configuration is only supported for the same subset of config options as ``AIRFLOW__{SECTION}__{KEY}_CMD`` .. envvar:: AIRFLOW_CONFIG The path to the Airflow configuration file. .. envvar:: AIRFLOW_CONN_{CONN_ID} Defines a new connection with the name ``{CONN_ID}`` using the URI value. For example, if you want to create a connection named ``PROXY_POSTGRES_TCP``, you can create a key ``AIRFLOW_CONN_PROXY_POSTGRES_TCP`` with the connection URI as the value. For more information, see: :ref:`environment_variables_connections`. .. envvar:: AIRFLOW_HOME The root directory for the Airflow content. This is the default parent directory for Airflow assets such as Dags and logs. .. envvar:: AIRFLOW_VAR_{KEY} Defines an Airflow variable. Replace the ``{KEY}`` placeholder with the variable name. For more information, see: :ref:`managing_variables`."
+        },
+        {
+          "rank": 4,
+          "score": 0.810609,
+          "chunk_id": "44d44ca53b1c",
+          "source_path": "airflow-core/docs/howto/dynamic-dag-generation.rst",
+          "word_count": 200,
+          "text": "function (or that are used in the ``with DAG(...)`` context manager are automatically registered, and no longer need to be stored in a global variable. Optimizing Dag parsing delays during execution ---------------------------------------------- .. versionadded:: 2.4 Sometimes when you generate a lot of Dynamic Dags from a single Dag file, it might cause unnecessary delays when the Dag file is parsed during task execution. The impact is a delay before a task starts. Why is this happening? You might not be aware but just before your task is executed, Airflow parses the Python file the Dag comes from. The Airflow Dag File Processor requires loading of a complete Dag file to process all metadata. However, task execution requires only a single Dag object to execute a task. Knowing this, we can skip the generation of unnecessary Dag objects when a task is executed, shortening the parsing time. This optimization is most effective when the number of generated Dags is high. Note that it is not always possible to use (for example when generation of subsequent Dags depends on the previous Dags) or when there are some side-effects of your Dags generation. Use this solution with care and test it thoroughly. A"
+        },
+        {
+          "rank": 5,
+          "score": 0.807374,
+          "chunk_id": "4b710c134f70",
+          "source_path": "airflow-core/docs/howto/export-more-env-vars.rst",
+          "word_count": 56,
+          "text": "be strings. ``dag_id``, ``task_id``, ``execution_date``, ``dag_run_id``, ``dag_owner``, ``dag_email`` are reserved keys. For example, in your ``airflow_local_settings.py`` file: .. code-block:: python def get_airflow_context_vars(context) -> dict[str, str]: \"\"\" :param context: The context for the task_instance of interest. \"\"\" # more env vars return {\"airflow_cluster\": \"main\"} See :ref:`Configuring local settings <set-config:configuring-local-settings>` for details on how to configure local settings."
+        }
+      ]
+    },
+    {
+      "id": "s038",
+      "question": "If an AWS connection test succeeds, what question about permissions is still unanswered?",
+      "type": "direct",
+      "expected_source": "providers/amazon/docs/connections/aws.rst",
+      "expected_answer": "The test can establish that the credentials are valid through `GetCallerIdentity`, but it cannot establish access to a particular AWS service.",
+      "hit_at_5": true,
+      "reciprocal_rank": 1.0,
+      "retrieved": [
+        {
+          "rank": 1,
+          "score": 0.795346,
+          "chunk_id": "5fb367b1c340",
+          "source_path": "providers/amazon/docs/connections/aws.rst",
+          "word_count": 200,
+          "text": "test. During this test components of Amazon Provider invoke AWS Security Token Service API `GetCallerIdentity <https://docs.aws.amazon.com/STS/latest/APIReference/API_GetCallerIdentity.html>`__. This service can **only** check if your credentials are valid. Unfortunately it is not possible to validate if credentials have access to specific AWS service or not. If you use the Amazon Provider to communicate with AWS API compatible services (MinIO, LocalStack, etc.) test connection failure **doesn't mean** that your connection has wrong credentials. Many compatible services provide only a limited number of AWS API services, and most of them do not implement the AWS STS GetCallerIdentity method. Authenticating to AWS --------------------- Authentication may be performed using any of the options described in Boto3 Guide :external+boto3:ref:`guide_credentials`. Alternatively, one can pass credentials in as a Connection initialisation parameter. To use IAM instance profile, create an \"empty\" connection (i.e. one with no AWS Access Key ID or AWS Secret Access Key specified, or ``aws://``). Default Connection IDs ----------------------- The default connection ID is ``aws_default``. If the environment/machine where you are running Airflow has the file credentials in ``${HOME}/.aws/``, and the default connection has user and pass fields empty, it will take automatically the credentials from there. .. important:: Previously, the ``aws_default`` connection had the \"extras\" field"
+        },
+        {
+          "rank": 2,
+          "score": 0.762322,
+          "chunk_id": "a829a365f1f7",
+          "source_path": "providers/amazon/docs/changelog.rst",
+          "word_count": 200,
+          "text": "``Allow AWS Secrets Backends use AWS Connection capabilities (#25628)`` * ``Implement 'EmrEksCreateClusterOperator' (#25816)`` * ``Improve error handling/messaging around bucket exist check (#25805)`` Bug Fixes ~~~~~~~~~ * ``Fix display aws connection info (#26025)`` * ``Fix 'EcsBaseOperator' and 'EcsBaseSensor' arguments (#25989)`` * ``Fix RDS system test (#25839)`` * ``Avoid circular import problems when instantiating AWS SM backend (#25810)`` * ``fix bug construction of Connection object in version 5.0.0rc3 (#25716)`` .. Below changes are excluded from the changelog. Move them to appropriate section above if needed. Do not delete the lines(!): * ``Fix EMR serverless system test (#25969)`` * ``Add 'output' property to MappedOperator (#25604)`` * ``Add Airflow specific warning classes (#25799)`` * ``Replace SQL with Common SQL in pre commit (#26058)`` * ``Hook into Mypy to get rid of those cast() (#26023)`` * ``Raise an error on create bucket if use regional endpoint for us-east-1 and region not set (#25945)`` * ``Update AWS system tests to use SystemTestContextBuilder (#25748)`` * ``Convert Quicksight Sample DAG to System Test (#25696)`` * ``Consolidate to one 'schedule' param (#25410)`` 5.0.0 ..... Breaking changes ~~~~~~~~~~~~~~~~ * ``Avoid requirement that AWS Secret Manager JSON values be urlencoded. (#25432)`` * ``Remove deprecated modules (#25543)`` * ``Resolve Amazon Hook's 'region_name'"
+        },
+        {
+          "rank": 3,
+          "score": 0.755232,
+          "chunk_id": "0821cf29ffa8",
+          "source_path": "providers/amazon/docs/changelog.rst",
+          "word_count": 200,
+          "text": "sys tests (#29254)`` * ``Fix false-positive spellcheck failure (#29190)`` 7.1.0 ..... Features ~~~~~~~~ * ``Add ''configuration_overrides'' to templated fields (#28920)`` * ``Add a new SSM hook and use it in the System Test context builder (#28755)`` * ``Add waiter config params to emr.add_job_flow_steps (#28464)`` * ``Add AWS Sagemaker Auto ML operator and sensor (#28472)`` * ``new operator to create a sagemaker experiment (#28837)`` Bug Fixes ~~~~~~~~~ * ``Avoid circular import from S3HookUriParseFailure (#28908)`` * ``Use compat for cached_property in AWS Batch modules (#28835)`` * ``Apply \"unify bucket and key\" before \"provide bucket\" (#28710)`` Misc ~~~~ * ``Update S3ToRedshiftOperator docs to inform users about multiple key functionality (#28705)`` * ``Refactor waiter function and improve unit tests (#28753)`` * ``Better exception raised in case of numpy missing (#28722)`` * ``Don't call get_connection from provide_bucket_name (#28716)`` .. Below changes are excluded from the changelog. Move them to appropriate section above if needed. Do not delete the lines(!): * ``Switch to ruff for faster static checks (#28893)`` 7.0.0 ..... Breaking changes ~~~~~~~~~~~~~~~~ JSON secrets in the 'SecretsManagerBackend' are never interpreted as urlencoded. In ``5.x`` and ``6.x``, the code would infer whether the JSON secret values were urlencoded based on context clues; now the unaltered"
+        },
+        {
+          "rank": 4,
+          "score": 0.749739,
+          "chunk_id": "c3acd809c3e6",
+          "source_path": "providers/amazon/docs/changelog.rst",
+          "word_count": 200,
+          "text": "one task failed. (#37979)`` * ``Fix init checks for aws redshift to s3 operator (#37861)`` Misc ~~~~ * ``Make the method 'BaseAuthManager.is_authorized_custom_view' abstract (#37915)`` * ``Replace \"Role\" by \"Group\" in AWS auth manager (#38078)`` * ``Avoid use of 'assert' outside of the tests (#37718)`` * ``Use 'AwsLogsHook' when fetching Glue job logs (#38010)`` * ``Implement 'filter_permitted_dag_ids' in AWS auth manager (#37666)`` * ``AWS auth manager CLI: persist the policy store description when doing updates (#37946)`` * ``Change f-string to formatting into the logging messages for Batch Executor (#37929)`` .. Below changes are excluded from the changelog. Move them to appropriate section above if needed. Do not delete the lines(!): * ``Update yanked versions in providers changelogs (#38262)`` * ``Bump ruff to 0.3.3 (#38240)`` * ``Resolve G004: Logging statement uses f-string (#37873)`` * ``Add back system test for AWS auth manager (#38044)`` * ``Revert \"Add system test to test the AWS auth manager (#37947)\" (#38004)`` * ``Add system test to test the AWS auth manager (#37947)`` * ``fix: try002 for provider amazon (#38789)`` * ``Typo fix (#38783)`` * ``fix: COMMAND string should be raw to avoid SyntaxWarning: invalid escape sequence '\\s' (#38734)`` * ``Revert \"fix: COMMAND string should be raw to"
+        },
+        {
+          "rank": 5,
+          "score": 0.742448,
+          "chunk_id": "d83092978ed8",
+          "source_path": "airflow-core/docs/security/security_model.rst",
+          "word_count": 200,
+          "text": "users are highly privileged and must be trusted not to abuse these capabilities. The ``test connection`` feature is disabled by default since Airflow 2.7.0, and enabling it is an explicit Deployment Manager decision that acknowledges these risks. See :ref:`connection-configuration-users` for details. The boundary of this grant is **worker-context execution and the connection values the role may write**. A connection configuration user causing code to run on a worker, or influencing a client library's behaviour through connection parameters, is exercising a documented capability and is not a vulnerability — even where the mechanism looks like injection. What this grant does **not** include is obtaining credential material the role is not entitled to read, or reaching a component the role has no execution rights over. The role has write-only access to stored credentials, so a defect that lets a connection configuration user *recover* a secret, or that causes code to execute in the Scheduler or API server rather than on a worker, crosses the boundary and **is** a vulnerability. The distinguishing question is not the role, which is privileged either way, but whether the defect yields something the role could not already obtain. Denial of Service by authenticated users ........................................ Airflow is"
+        }
+      ]
+    },
+    {
+      "id": "s042",
+      "question": "I want a value available when my DAG is parsed and I'm also thinking about how Airflow protects stored values. What are the two separate points the packet makes?",
+      "type": "synthesis",
+      "expected_source": [
+        "airflow-core/docs/howto/dynamic-dag-generation.rst",
+        "airflow-core/docs/security/secrets/fernet.rst"
+      ],
+      "expected_answer": "For top-level DAG configuration, the packet recommends environment variables because Airflow Variables require a metadata DB lookup. Separately, Fernet is used to encrypt passwords in connection and variable configuration.",
+      "hit_at_5": false,
+      "reciprocal_rank": 0.0,
+      "retrieved": [
+        {
+          "rank": 1,
+          "score": 0.809665,
+          "chunk_id": "60b3901da216",
+          "source_path": "airflow-core/docs/core-concepts/dags.rst",
+          "word_count": 200,
+          "text": "the setting to use when your Dags are defined through a wrapper or abstraction whose source does not contain those strings. The flag is read by the Dag file processor, so set it on that component (and on anything that runs ``airflow dags reserialize``) and restart it for the change to take effect -- otherwise Dags may appear after a manual reserialize and then disappear again on the next processor scan. You can also provide an ``.airflowignore`` file inside your Dag bundle, or any of its subfolders, which describes patterns of files for the loader to ignore. It covers the directory it's in plus all subfolders underneath it. See :ref:`.airflowignore <concepts:airflowignore>` below for details of the file syntax. In the case where the ``.airflowignore`` does not meet your needs and you want a more flexible way to control if a python file needs to be parsed by airflow, you can plug your callable by setting ``might_contain_dag_callable`` in the config file. Note, this callable will replace the default Airflow heuristic, i.e. checking if the strings ``airflow`` and ``dag`` (case-insensitively) are present in the python file. .. code-block:: def might_contain_dag(file_path: str, zip_file: zipfile.ZipFile | None = None) -> bool: # Your logic"
+        },
+        {
+          "rank": 2,
+          "score": 0.803976,
+          "chunk_id": "66cefae7acfb",
+          "source_path": "airflow-core/docs/administration-and-deployment/dagfile-processing.rst",
+          "word_count": 200,
+          "text": "but it's a separate task, depending on your particular deployment, your Dag structure, hardware availability and expectations, to decide which knobs to turn to get best effect for you. Part of the job when managing the deployment is to decide what you are going to optimize for. Some users are ok with 30 seconds delays of new Dag parsing, at the expense of lower CPU usage, whereas some other users expect the Dags to be parsed almost instantly when they appear in the Dags folder at the expense of higher CPU usage for example. Airflow gives you the flexibility to decide, but you should find out what aspect of performance is most important for you and decide which knobs you want to turn in which direction. Generally for fine-tuning, your approach should be the same as for any performance improvement and optimizations (we will not recommend any specific tools - just use the tools that you usually use to observe and monitor your systems): * it's extremely important to monitor your system with the right set of tools that you usually use to monitor your system. This document does not go into details of particular metrics and tools that you"
+        },
+        {
+          "rank": 3,
+          "score": 0.803574,
+          "chunk_id": "cf275afb7213",
+          "source_path": "airflow-core/src/airflow/serialization/dag_dependency.py",
+          "word_count": 200,
+          "text": "# source: airflow-core/src/airflow/serialization/dag_dependency.py ## class: DagDependency Dataclass for representing dependencies between dags. These are calculated during serialization and attached to serialized dags. The source and target keys store the information of what component depends on what. For an asset related dependency, a root node will have the source value equal to its dependency_type and an end node will have the target value equal to its dependency_type. It's easier to explain by examples. For the example below, .. code-block:: python # we assume the asset is active DAG(dag_id=\"dag_1\", schedule=[Asset.ref(uri=\"uri\")]) we get dag dependency like .. code-block:: python DagDependency( source=\"asset\", target=\"dag_1\", label=\"name\", # asset name, we always use asset name as label dependency_type=\"asset\", dependency_id=1, # asset id ) This will look like `Asset name` -> `Dag dag_1` on the dependency graph. This is a root asset node as it has the source value as asset, and it points to its target \"dag_1\" For more complex dependency like asset alias, .. code-block:: python # we assume the asset is active DAG( dag_id=\"dag_2\", schedule=[ AssetAlias(name=\"alias_1\"), # resolved into Asset(uri=\"uri\", name=\"name\") AssetAlias(name=\"alias_2\"), # resolved to nothing ], ) we'll need to store more data, .. code-block:: python [ DagDependency( source=\"asset\", target=\"asset-alias:alias_1\", label=\"name\", dependency_type=\"asset\", dependency_id=\"1\", ),"
+        },
+        {
+          "rank": 4,
+          "score": 0.801025,
+          "chunk_id": "6652683a9d27",
+          "source_path": "airflow-core/src/airflow/policies.py",
+          "word_count": 103,
+          "text": "a few DAG files requiring longer parsing times, while others do not. You can control them separately instead of having one value for all DAG files. If the return value is less than or equal to 0, it means no timeout during the DAG parsing. ## class: DefaultPolicy Default implementations of the policy functions. :meta private: ## function: make_plugin_from_local_settings Turn the functions from airflow_local_settings module into a custom/local plugin. Allows plugin-registered functions to co-operate with pluggy/setuptool entrypoint plugins of the same methods. Airflow local settings will be \"win\" (i.e. they have the final say) as they are the last plugin registered. :meta private:"
+        },
+        {
+          "rank": 5,
+          "score": 0.800546,
+          "chunk_id": "295af6845cf9",
+          "source_path": "airflow-core/docs/installation/index.rst",
+          "word_count": 200,
+          "text": "independent from Airflow (for example DNS resources, sharing the nodes/resources) with more (or less) pods and containers that are needed that might depend on particular choice of the technology/cloud/integration of monitoring etc. * Technical details of database, hardware, network, etc. that your deployment is running on * The complexity of the code you add to your Dags, configuration, plugins, settings etc. (note, that Airflow runs the code that Dag author and Deployment Manager provide) * The number and choice of providers you install and use (Airflow has more than 80 providers) that can be installed by choice of the Deployment Manager and using them might require more resources. * The choice of parameters that you use when tuning Airflow. Airflow has many configuration parameters that can fine-tuned to your needs * The number of DagRuns and tasks instances you run with parallel instances of each in consideration * How complex are the tasks you run The above \"Dag\" characteristics will change over time and even will change depending on the time of the day or week, so you have to be prepared to continuously monitor the system and adjust the parameters to make it works smoothly. While we can provide"
+        }
+      ]
+    },
+    {
+      "id": "a045",
+      "question": "How do I configure a Snowflake connection in Airflow?",
+      "type": "adversarial",
+      "expected_source": "none",
+      "expected_answer": "No answer in corpus.",
+      "hit_at_5": null,
+      "reciprocal_rank": null,
+      "retrieved": [
+        {
+          "rank": 1,
+          "score": 0.776529,
+          "chunk_id": "392c3e1c3f59",
+          "source_path": "airflow-core/docs/howto/docker-compose/index.rst",
+          "word_count": 200,
+          "text": "on Linux the configuration must be in the section ``services: airflow-worker`` adding ``extra_hosts: - \"host.docker.internal:host-gateway\"``; and use ``host.docker.internal`` instead of ``localhost``. This configuration vary in different platforms. Please check the Docker documentation on `Docker Desktop networking <https://docs.docker.com/desktop/features/networking/networking-how-tos/>`_ for further information. Debug Airflow inside docker container using PyCharm =================================================== .. jinja:: quick_start_ctx Prerequisites: Create a project in **PyCharm** and download the (`docker-compose.yaml <{{ doc_root_url }}docker-compose.yaml>`__). Steps: 1) Modify ``docker-compose.yaml`` Add the following section under the ``services`` section: .. code-block:: yaml airflow-python: <<: *airflow-common profiles: - debug environment: <<: *airflow-common-env user: \"50000:0\" entrypoint: [ \"/bin/bash\", \"-c\" ] .. note:: This code snippet creates a new service named **\"airflow-python\"** specifically for PyCharm's Python interpreter. On a Linux system, if you have executed the command ``echo -e \"AIRFLOW_UID=$(id -u)\" > .env``, you need to set ``user: \"50000:0\"`` in ``airflow-python`` service to avoid PyCharm's ``Unresolved reference 'airflow'`` error. 2) Configure PyCharm Interpreter * Open PyCharm and navigate to **Settings** > **Project: <Your Project Name>** > **Python Interpreter**. * Click the **\"Add Interpreter\"** button and choose **\"On Docker Compose\"**. * In the **Configuration file** field, select your ``docker-compose.yaml`` file. * In the **Service field**, choose the newly added ``airflow-python`` service. * Click **\"Next\"** and follow the"
+        },
+        {
+          "rank": 2,
+          "score": 0.769203,
+          "chunk_id": "47529ed7f936",
+          "source_path": "providers/amazon/docs/changelog.rst",
+          "word_count": 200,
+          "text": "(#43988)`` * ``Add fail_on_file_not_exist option to SFTPToS3Operator (#44320)`` * ``Add 'wait_policy' option to 'EmrCreateJobFlowOperator' (#44055)`` * ``Add meta_data_directive to 'S3CopyObjectOperator' (#44160)`` Misc ~~~~ * ``Remove references to AIRFLOW_V_2_9_PLUS (#44987)`` * ``Bump minimum Airflow version in providers to Airflow 2.9.0 (#44956)`` * ``Consistent way of checking Airflow version in providers (#44686)`` * ``Remove unnecessary compatibility code in S3 asset import (#44714)`` * ``Remove AIP-44 from taskinstance (#44540)`` * ``Add do_xcom_push documentation in EcsRunTaskOperator (#44440)`` * ``Move Asset user facing components to task_sdk (#43773)`` * ``Set up JWT token authentication in Fast APIs (#42634)`` * ``Bump to mypy-boto3-appflow and pass without '# type: ignore[arg-type]' (#44115)`` * ``Update DAG example links in multiple providers documents (#44034)`` .. Below changes are excluded from the changelog. Move them to appropriate section above if needed. Do not delete the lines(!): * ``Use Python 3.9 as target version for Ruff & Black rules (#44298)`` * ``Fix deferrable RedshiftClusterSensor (#45098)`` * ``Update path of example dags in docs (#45069)`` 9.1.0 ..... Features ~~~~~~~~ * ``feat: add OpenLineage support for RedshiftToS3Operator (#41632)`` * ``Add 'SageMakerProcessingSensor' (#43144)`` * ``Make 'RedshiftDataOperator' handle multiple queries (#42900)`` Bug Fixes ~~~~~~~~~ * ``fix(providers/amazon): alias is_authorized_dataset to is_authorized_asset (#43470)`` * ``Remove returns in final clause"
+        },
+        {
+          "rank": 3,
+          "score": 0.763839,
+          "chunk_id": "3ab82e5f3dff",
+          "source_path": "airflow-core/docs/howto/run-behind-proxy.rst",
+          "word_count": 200,
+          "text": "the following setting in your ``airflow.cfg``:: base_url = http://my_host/myorg/airflow - Configure your reverse proxy (e.g. nginx) to pass the url and http header as-is to the Airflow webserver, without any rewrite, for example:: server { listen 80; server_name lab.mycompany.com; location /myorg/airflow/ { proxy_pass http://localhost:8080; proxy_set_header Host $http_host; proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for; proxy_set_header X-Forwarded-Proto $scheme; proxy_set_header Upgrade $http_upgrade; proxy_set_header Connection $connection_upgrade; proxy_redirect off; proxy_http_version 1.1; } } - Some parts of the UI are rendered inside iframes (Auth managers security links for instance), you need to make sure that you are not setting a restricted CSP for iframe rendering such as ``frame-ancestors 'none'``. You can set the CSP header in your reverse proxy configuration, for example:: add_header Content-Security-Policy \"frame-ancestors 'self';\"; - The API server runs on one of two application servers, selected with the ``[api] server_type`` option: `Uvicorn <https://www.uvicorn.org>`_, the default, or `Gunicorn <https://gunicorn.org>`_ with Uvicorn workers. Both read the settings below. - Use ``--proxy-headers`` CLI flag to tell the application server to respect these headers: ``airflow api-server --proxy-headers`` - If your proxy server is not on the same host (or in the same docker container) as Airflow, then you will need to set the ``FORWARDED_ALLOW_IPS`` environment variable so the application server"
+        },
+        {
+          "rank": 4,
+          "score": 0.763769,
+          "chunk_id": "ea82e4813e6d",
+          "source_path": "providers/google/docs/changelog.rst",
+          "word_count": 200,
+          "text": "only available for Airflow 2.8+ as explained in the `Apache Airflow providers support policy <https://github.com/apache/airflow/blob/main/PROVIDERS.rst#minimum-supported-version-of-airflow-for-community-managed-providers>`_. Features ~~~~~~~~ * ``Add 'CloudRunServiceHook' and 'CloudRunCreateServiceOperator' (#40008)`` Bug Fixes ~~~~~~~~~ * ``fix(providers/google): add missing sync_hook_class to CloudDataTransferServiceAsyncHook (#41417)`` Misc ~~~~ * ``Bump minimum Airflow version in providers to Airflow 2.8.0 (#41396)`` * ``Refactor 'DataprocCreateBatchOperator' (#41527)`` * ``Upgrade package gcloud-aio-auth>=5.2.0 (#41262)`` .. Below changes are excluded from the changelog. Move them to appropriate section above if needed. Do not delete the lines(!): 10.21.1 ....... Bug Fixes ~~~~~~~~~ * ``fix unnecessary imports for CloudSQL hook (#41009)`` * ``Move sensitive information to the secret manager for the system test google_analytics_admin (#40951)`` * ``Fix Custom Training Job operators to accept results without managed model (#40685)`` * ``Fix behavior for reattach_state parameter in BigQueryInsertJobOperator (#40664)`` * ``Fix CloudSQLDatabaseHook temp file handling (#41092)`` Misc ~~~~ * ``Refactor dataproc system tests (#40720)`` * ``openlineage: migrate OpenLineage provider to V2 facets. (#39530)`` * ``Resolve CloudSQLDatabaseHook deprecation warning (#40834)`` * ``Fix BeamRunJavaPipelineOperator fails without job_name set (#40645)`` .. Below changes are excluded from the changelog. Move them to appropriate section above if needed. Do not delete the lines(!): * ``Prepare Providers docs ad hoc release (#41074)`` 10.21.0 ....... .. note:: The change ``Fix"
+        },
+        {
+          "rank": 5,
+          "score": 0.760435,
+          "chunk_id": "6d48eb54218f",
+          "source_path": "providers/amazon/docs/changelog.rst",
+          "word_count": 200,
+          "text": "provider dependencies (#47203)`` * ``Add legacy namespace packages to airflow.providers (#47064)`` * ``Replace 'external_trigger' check with DagRunType (#45961)`` * ``Remove extra whitespace in provider readme template (#46975)`` * ``Fix TestRdsCopyDbSnapshotOperator tests (#47006)`` * ``Fix new UI when running outside of breeze (#46991)`` * ``Upgrade flit to 3.11.0 (#46938)`` * ``Upgrade providers flit build requirements to 3.12.0 (#48362)`` * ``(Re)move old dependencies from the old FAB UI (#48007)`` * ``Move airflow sources to airflow-core package (#47798)`` * ``Update example_s3 system test (#47974)`` * ``Set 'wait_for_completion' to True in example_mwaa system test (#47877)`` * ``Fix AWS auth manager system test (#47876)`` * ``AIP-72: Handle Custom XCom Backend on Task SDK (#47339)`` * ``Remove links to x/twitter.com (#47801)`` * ``Test 'MwaaHook''s IAM fallback in system test (#47759)`` * ``Update Dockerfile in aws execs docs (#47799)`` * ``Update AWS auth manager system test to handle new way of passing JWT token (#47794)`` * ``Rename 'get_permitted_dag_ids' and 'filter_permitted_dag_ids' to 'get_authorized_dag_ids' and 'filter_authorized_dag_ids' (#47640)`` * ``Set JWT token to localStorage from cookies (#47432)`` * ``Re-work JWT Validation and Generation to use public/private key and official claims (#46981)`` * ``AIP-84 Add Auth for DAG Versioning (#47553)`` * ``Introduce 'filter_authorized_menu_items' to filter menu items based on permissions (#47681)``"
+        }
+      ]
+    },
+    {
+      "id": "a048",
+      "question": "How does Airflow authenticate to Salesforce in its provider connection?",
+      "type": "adversarial",
+      "expected_source": "none",
+      "expected_answer": "No answer in corpus.",
+      "hit_at_5": null,
+      "reciprocal_rank": null,
+      "retrieved": [
+        {
+          "rank": 1,
+          "score": 0.776215,
+          "chunk_id": "4565c770600d",
+          "source_path": "airflow-core/docs/security/api.rst",
+          "word_count": 200,
+          "text": ".. Licensed to the Apache Software Foundation (ASF) under one or more contributor license agreements. See the NOTICE file distributed with this work for additional information regarding copyright ownership. The ASF licenses this file to you under the Apache License, Version 2.0 (the \"License\"); you may not use this file except in compliance with the License. You may obtain a copy of the License at .. http://www.apache.org/licenses/LICENSE-2.0 .. Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on an \"AS IS\" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the specific language governing permissions and limitations under the License. Public API ========== Airflow public API authentication --------------------------------- The Airflow public API uses JWT (JSON Web Token) for authenticating API requests. Each request made to the Airflow API must include a valid JWT token in the ``Authorization`` header to verify the identity and permissions of the client. Generate a JWT token ^^^^^^^^^^^^^^^^^^^^ To interact with the Airflow API, clients must first authenticate and obtain a JWT token. The token can be generated by making a ``POST`` request to the ``/auth/token`` endpoint, passing the necessary credentials"
+        },
+        {
+          "rank": 2,
+          "score": 0.771266,
+          "chunk_id": "4e804f56acff",
+          "source_path": "airflow-core/src/airflow/api_fastapi/auth/managers/models/batch_apis.py",
+          "word_count": 55,
+          "text": "# source: airflow-core/src/airflow/api_fastapi/auth/managers/models/batch_apis.py ## class: IsAuthorizedConnectionRequest Represent the parameters of ``is_authorized_connection`` API in the auth manager. ## class: IsAuthorizedDagRequest Represent the parameters of ``is_authorized_dag`` API in the auth manager. ## class: IsAuthorizedPoolRequest Represent the parameters of ``is_authorized_pool`` API in the auth manager. ## class: IsAuthorizedVariableRequest Represent the parameters of ``is_authorized_variable`` API in the auth manager."
+        },
+        {
+          "rank": 3,
+          "score": 0.766547,
+          "chunk_id": "9adfd063ed3e",
+          "source_path": "providers/microsoft/azure/docs/connections/adx.rst",
+          "word_count": 200,
+          "text": "(i.e. use \"AAD_APP\" or \"AAD_APP_CERT\" as the Authentication Method in the Airflow connection). 2. Use `AAD username and password <https://docs.microsoft.com/en-us/azure/active-directory/authentication/concept-authentication-methods>`_ (i.e. use \"AAD_CREDS\" as the Authentication Method in the Airflow connection). 3. Use a `AAD device code <https://docs.microsoft.com/en-us/azure/active-directory/develop/v2-oauth2-device-code>`_ (i.e. use \"AAD_DEVICE\" as the Authentication Method in the Airflow connection). 4. Use managed identity by setting ``managed_identity_client_id``, ``workload_identity_tenant_id`` (under the hook, it uses DefaultAzureCredential_ with these arguments) 5. Fallback on DefaultAzureCredential_. This includes a mechanism to try different options to authenticate: Managed System Identity, environment variables, authentication through Azure CLI and etc. Only one authorization method can be used at a time. If you need to manage multiple credentials or keys then you should configure multiple connections. Default Connection IDs ---------------------- All hooks and operators related to Microsoft Azure Data Explorer use ``azure_data_explorer_default`` by default. Configuring the Connection -------------------------- Data Explorer Cluster URL Specify the Data Explorer cluster URL. Needed for all authentication methods. Authentication Method Specify authentication method. Available authentication methods are: * AAD_APP: Authentication with AAD application certificate. A Tenant ID is required when using this method. Provide application ID and application key through Username and Password parameters. * AAD_APP_CERT: Authentication with AAD application certificate. Tenant ID, Application PEM"
+        },
+        {
+          "rank": 4,
+          "score": 0.763248,
+          "chunk_id": "1187de2e19eb",
+          "source_path": "providers/amazon/docs/connections/aws.rst",
+          "word_count": 200,
+          "text": "environment/machine where you are running Airflow has the file credentials in ``${HOME}/.aws/``, and the default connection has user and pass fields empty, it will take automatically the credentials from there. .. important:: Previously, the ``aws_default`` connection had the \"extras\" field set to ``{\"region_name\": \"us-east-1\"}`` on install. This means that by default the ``aws_default`` connection used the ``us-east-1`` region. This is no longer the case and the region needs to be set manually, either in the connection screens in Airflow, or via the ``AWS_DEFAULT_REGION`` environment variable. .. caution:: If you do not run \"airflow connections create-default-connections\" command, most probably you do not have ``aws_default``. For historical reasons, the Amazon Provider components (Hooks, Operators, Sensors, etc.) fallback to the default boto3 credentials strategy in case of a missing Connection ID. If you need to use the default boto3 credential strategy (credentials in environment variables, IAM Profile, etc.) please provide ``None``, instead of a missing connection ID, to avoid getting a warning in your logs. .. _howto/connection:aws:configuring-the-connection: Configuring the Connection -------------------------- AWS Access Key ID (optional) Specify the AWS access key ID used for the initial connection. If you do an `assume role <https://docs.aws.amazon.com/STS/latest/APIReference/API_AssumeRole.html>`__ by specifying a ``role_arn`` in the **Extra** field, then"
+        },
+        {
+          "rank": 5,
+          "score": 0.763022,
+          "chunk_id": "34aa87fa8f16",
+          "source_path": "providers/microsoft/azure/docs/secrets-backends/azure-key-vault.rst",
+          "word_count": 184,
+          "text": "a connection id of ``smtp_default``, you would want to store your connection at ``airflow-connections-smtp-default``. The value of the secret must be the :ref:`connection URI representation <generating_connection_uri>` of the connection object. Storing and Retrieving Variables \"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\" If you have set ``variables_prefix`` as ``airflow-variables``, then for an Variable key of ``hello``, you would want to store your Variable at ``airflow-variables-hello``. Multi-team lookup \"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\" In multi-team mode, this backend looks for team-scoped secrets first and falls back to the global secret name when a team-scoped secret is not found. For connections: * Team-scoped: ``{connections_prefix}-{team_name}--{conn_id}`` * Global fallback: ``{connections_prefix}-{conn_id}`` For variables: * Team-scoped: ``{variables_prefix}-{team_name}--{key}`` * Global fallback: ``{variables_prefix}-{key}`` Underscores are normalized to the configured separator, so with ``connections_prefix=\"airflow-connections\"``, ``team_name=\"team_a\"``, and ``conn_id=\"my_db\"``, the backend looks up ``airflow-connections-team-a--my-db`` before falling back to ``airflow-connections-my-db``. Authentication \"\"\"\"\"\"\"\"\"\"\"\"\"\" There are 3 ways to authenticate Azure Key Vault backend. 1. Set ``tenant_id``, ``client_id``, ``client_secret`` (using `ClientSecretCredential <https://learn.microsoft.com/en-us/python/api/azure-identity/azure.identity.clientsecretcredential?view=azure-python>`_) 2. Set ``managed_identity_client_id``, ``workload_identity_tenant_id`` (using `DefaultAzureCredential <https://learn.microsoft.com/en-us/python/api/azure-identity/azure.identity.defaultazurecredential?view=azure-python>`_ with these arguments) 3. Not providing extra connection configuration for falling back to `DefaultAzureCredential <https://learn.microsoft.com/en-us/python/api/azure-identity/azure.identity.defaultazurecredential?view=azure-python>`_ Reference \"\"\"\"\"\"\"\"\" For more details on client authentication refer to the `DefaultAzureCredential Class reference <https://docs.microsoft.com/en-us/python/api/azure-identity/azure.identity.defaultazurecredential?view=azure-python>`_."
+        }
+      ]
+    },
+    {
+      "id": "a051",
+      "question": "Where in the packet does it explain rotating keys in AWS Secrets Manager?",
+      "type": "adversarial",
+      "expected_source": "none",
+      "expected_answer": "No answer in corpus.",
+      "hit_at_5": null,
+      "reciprocal_rank": null,
+      "retrieved": [
+        {
+          "rank": 1,
+          "score": 0.777367,
+          "chunk_id": "6fd93c2021cb",
+          "source_path": "providers/amazon/docs/secrets-backends/aws-secrets-manager.rst",
+          "word_count": 200,
+          "text": "\"999\"}' Verify that you can get the secret: .. code-block:: console ❯ aws secretsmanager get-secret-value --secret-id airflow/connections/smtp_default { \"ARN\": \"arn:aws:secretsmanager:us-east-2:314524341751:secret:airflow/connections/smtp_default-7meuul\", \"Name\": \"airflow/connections/smtp_default\", \"VersionId\": \"34f90eff-ea21-455a-9c8f-5ee74b21be672\", \"SecretString\": \"{\\n \\\"login\\\":\\\"nice_user\\\",\\n \\\"password\\\":\\\"this_is_the_password\\\"\\n, \\n \\\"host\\\":\\\"ec2.8399.com\\\"\\n,\\n \\\"port\\\":\\\"999\\\"\\n}\\n\", \"VersionStages\": [ \"AWSCURRENT\" ], \"CreatedDate\": \"2020-04-08T02:10:35.132000+01:00\" } If you don't want to use any ``connections_prefix`` for retrieving connections, set it as an empty string ``\"\"`` in the configuration. Storing and Retrieving Variables ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ If you have set ``variables_prefix`` as ``airflow/variables``, then for a Variable key of ``hello``, you would want to store your Variable at ``airflow/variables/hello``. Optional lookup ^^^^^^^^^^^^^^^ Optionally connections, variables, or config may be looked up exclusive of each other or in any combination. This will prevent requests being sent to AWS Secrets Manager for the excluded type. If you want to look up some and not others in AWS Secrets Manager you may do so by setting the relevant ``*_prefix`` parameter of the ones to be excluded as ``null``. For example, if you want to set parameter ``connections_prefix`` to ``\"airflow/connections\"`` and not look up variables and config, your configuration file should look like this: .. code-block:: ini [secrets] backend = airflow.providers.amazon.aws.secrets.secrets_manager.SecretsManagerBackend backend_kwargs = { \"connections_prefix\": \"airflow/connections\", \"variables_prefix\": null, \"config_prefix\": null, \"profile_name\": \"default\" } If you want"
+        },
+        {
+          "rank": 2,
+          "score": 0.767044,
+          "chunk_id": "9ef1370319fd",
+          "source_path": "providers/amazon/docs/changelog.rst",
+          "word_count": 200,
+          "text": "static checks (#28893)`` 7.0.0 ..... Breaking changes ~~~~~~~~~~~~~~~~ JSON secrets in the 'SecretsManagerBackend' are never interpreted as urlencoded. In ``5.x`` and ``6.x``, the code would infer whether the JSON secret values were urlencoded based on context clues; now the unaltered values are *always* used to construct ``Connection`` objects. Pandas is now an optional dependency of the provider. The ``SqlToS3Operator`` and ``HiveToDynamoDBOperator`` require Pandas to be installed (you can install it automatically by adding ``[pandas]`` extra when installing the provider. * ``Make pandas dependency optional for Amazon Provider (#28505)`` Features ~~~~~~~~ * ``Deprecate 'full_url_mode' for SecretsManagerBackend; whether a secret is a JSON or URL is inferred (#27920)`` * ``Add execution role parameter to AddStepsOperator (#28484)`` * ``Add AWS SageMaker operator to register a model's version (#28024)`` * ``Add link for EMR Steps Sensor logs (#28180)`` * ``Add Amazon Elastic Container Registry (ECR) Hook (#28279)`` * ``Add EMR Notebook operators (#28312)`` * ``Create 'LambdaCreateFunctionOperator' and sensor (#28241)`` * ``Better support for Boto Waiters (#28236)`` * ``Amazon Provider Package user agent (#27823)`` * ``Allow waiter to be configured via EmrServerless Operators (#27784)`` * ``Add operators + sensor for aws sagemaker pipelines (#27786)`` * ``Update RdsHook docstrings to match correct argument names (#28108)`` *"
+        },
+        {
+          "rank": 3,
+          "score": 0.766187,
+          "chunk_id": "0a8728dc0e2a",
+          "source_path": "providers/amazon/docs/secrets-backends/aws-ssm-parameter-store.rst",
+          "word_count": 200,
+          "text": "If you want to only lookup a specific subset of connections, variables or config in AWS Secrets Manager, you may do so by setting the relevant ``*_lookup_pattern`` parameter. This parameter takes a Regex as a string as value. For example, if you want to only lookup connections starting by \"m\" in AWS Secrets Manager, your configuration file should look like this: .. code-block:: ini [secrets] backend = airflow.providers.amazon.aws.secrets.secrets_manager.SecretsManagerBackend backend_kwargs = { \"connections_prefix\": \"airflow/connections\", \"connections_lookup_pattern\": \"^m\", \"profile_name\": \"default\" } Storing and Retrieving Connections \"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\" If you have set ``connections_prefix`` as ``/airflow/connections``, then for a connection id of ``smtp_default``, you would want to store your connection at ``/airflow/connections/smtp_default``. Optionally you can supply a profile name to reference aws profile, e.g. defined in ``~/.aws/config``. The value of the SSM parameter must be the :ref:`connection URI representation <generating_connection_uri>` or in the :ref:`JSON Format <connection-serialization-json-example>` of the connection object. In some cases, URI's that you will need to store in AWS SSM Parameter Store may not be intuitive, for example when using HTTP / HTTPS or SPARK, you may need URI's that will look like this: .. code-block:: ini http://https%3A%2F%2Fexample.com spark://spark%3A%2F%2Fspark-main-0.spark-main.spark:7077 This is a known situation, where schema and protocol parts of the URI are"
+        },
+        {
+          "rank": 4,
+          "score": 0.763329,
+          "chunk_id": "35e5d7badf39",
+          "source_path": "providers/amazon/docs/secrets-backends/aws-secrets-manager.rst",
+          "word_count": 200,
+          "text": "a JSON with the appropriate key-value pairs: .. image:: /img/aws-secrets-manager-json.png Using Airflow default names for connection fields is encouraged, but different aliases are allowed for each field: * Connection type: ``conn_type``, ``conn_id``, ``connection_type``, ``engine`` * Login: ``login``, ``user``, ``username``, ``user_name`` * Password: ``password``, ``pass``, ``key`` * Host: ``host``, ``remote_host``, ``server`` * Port: ``port`` * Extra: ``extra``. Note that this extra field should be a valid JSON. More words can be added to the list using the parameter ``extra_conn_words`` in the configuration. This parameter has to be a dict of lists with the following optional keys: user, password, host, schema, conn_type. As an example, if you have set ``connections_prefix`` as ``airflow/connections``, then for a connection id of ``smtp_default``, you would want to store your connection at ``airflow/connections/smtp_default``. This can be done through the AWS web console or through Amazon CLI as shown below: .. code-block:: bash aws secretsmanager put-secret-value \\ --secret-id airflow/connections/smtp_default \\ --secret-string '{\"login\": \"nice_user\", \"password\": \"this_is_the_password\", \"host\": \"ec2.8399.com\", \"port\": \"999\"}' Verify that you can get the secret: .. code-block:: console ❯ aws secretsmanager get-secret-value --secret-id airflow/connections/smtp_default { \"ARN\": \"arn:aws:secretsmanager:us-east-2:314524341751:secret:airflow/connections/smtp_default-7meuul\", \"Name\": \"airflow/connections/smtp_default\", \"VersionId\": \"34f90eff-ea21-455a-9c8f-5ee74b21be672\", \"SecretString\": \"{\\n \\\"login\\\":\\\"nice_user\\\",\\n \\\"password\\\":\\\"this_is_the_password\\\"\\n, \\n \\\"host\\\":\\\"ec2.8399.com\\\"\\n,\\n \\\"port\\\":\\\"999\\\"\\n}\\n\", \"VersionStages\": [ \"AWSCURRENT\" ], \"CreatedDate\": \"2020-04-08T02:10:35.132000+01:00\" } If you"
+        },
+        {
+          "rank": 5,
+          "score": 0.754596,
+          "chunk_id": "0821cf29ffa8",
+          "source_path": "providers/amazon/docs/changelog.rst",
+          "word_count": 200,
+          "text": "sys tests (#29254)`` * ``Fix false-positive spellcheck failure (#29190)`` 7.1.0 ..... Features ~~~~~~~~ * ``Add ''configuration_overrides'' to templated fields (#28920)`` * ``Add a new SSM hook and use it in the System Test context builder (#28755)`` * ``Add waiter config params to emr.add_job_flow_steps (#28464)`` * ``Add AWS Sagemaker Auto ML operator and sensor (#28472)`` * ``new operator to create a sagemaker experiment (#28837)`` Bug Fixes ~~~~~~~~~ * ``Avoid circular import from S3HookUriParseFailure (#28908)`` * ``Use compat for cached_property in AWS Batch modules (#28835)`` * ``Apply \"unify bucket and key\" before \"provide bucket\" (#28710)`` Misc ~~~~ * ``Update S3ToRedshiftOperator docs to inform users about multiple key functionality (#28705)`` * ``Refactor waiter function and improve unit tests (#28753)`` * ``Better exception raised in case of numpy missing (#28722)`` * ``Don't call get_connection from provide_bucket_name (#28716)`` .. Below changes are excluded from the changelog. Move them to appropriate section above if needed. Do not delete the lines(!): * ``Switch to ruff for faster static checks (#28893)`` 7.0.0 ..... Breaking changes ~~~~~~~~~~~~~~~~ JSON secrets in the 'SecretsManagerBackend' are never interpreted as urlencoded. In ``5.x`` and ``6.x``, the code would infer whether the JSON secret values were urlencoded based on context clues; now the unaltered"
+        }
+      ]
+    }
+  ]
+}

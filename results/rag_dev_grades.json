@@ -1,0 +1,241 @@
+{
+  "rubric": {
+    "grade": "correct / partial / wrong against expected_answer, only the asked-for points required (same rubric as closed-book).",
+    "faithfulness": "supported: every claim, including a claim that the excerpts do not cover the question, is consistent with the 5 excerpts given. partly_supported: some claims are not. unsupported: the main claim is not in, or is contradicted by, the excerpts.",
+    "cause": "For wrong/partial answers only. retrieval_miss: no retrieved chunk is from an expected source. retrieval_content_miss: an expected source was retrieved (counts as hit@5) but the answer-bearing sentence is not in any retrieved chunk. generation: the answer-bearing text was in the excerpts and the model did not use it.",
+    "adversarial": "declined=true if the model says the provided documentation does not cover the question."
+  },
+  "graded_by": "Claude, read against expected_answer and the 5 excerpts in rag_dev_retrieval.json. Five decision-critical judgments were re-read by a second, independent Claude session and confirmed (docs/DESIGN.md, 2026-10-01); not human-verified.",
+  "models": {
+    "qwen2.5:7b-instruct-q4_K_M": {
+      "answers_file": "rag_dev_qwen2.5_7b-instruct-q4_K_M.json",
+      "counts": {
+        "correct": 7,
+        "partial": 1,
+        "wrong": 4
+      },
+      "score": 7.5,
+      "faithfulness": {
+        "supported": 11,
+        "partly_supported": 0,
+        "unsupported": 1
+      },
+      "adversarial": [
+        {
+          "id": "a045",
+          "declined": true
+        },
+        {
+          "id": "a048",
+          "declined": true
+        },
+        {
+          "id": "a051",
+          "declined": true
+        }
+      ],
+      "n_declined": 3,
+      "graded": [
+        {
+          "id": "d000",
+          "grade": "correct",
+          "faithfulness": "supported",
+          "cause": null,
+          "reason": "Current task in Airflow 3; also gives the Airflow 2 difference, both in excerpts [1] and [5]."
+        },
+        {
+          "id": "d003",
+          "grade": "wrong",
+          "faithfulness": "supported",
+          "cause": "retrieval_content_miss",
+          "reason": "Says the docs do not cover it. True of the excerpts: pools.rst chunk [3] starts just after the default_pool sentence and [5] is the licence header."
+        },
+        {
+          "id": "d006",
+          "grade": "wrong",
+          "faithfulness": "unsupported",
+          "cause": "generation",
+          "reason": "Says the docs do not cover it, but excerpt [2] states queued tasks start by priority-weight of the task and its descendants."
+        },
+        {
+          "id": "d009",
+          "grade": "correct",
+          "faithfulness": "supported",
+          "cause": null,
+          "reason": "Edit the pool so deferred tasks occupy slots; excerpts [2]/[5]."
+        },
+        {
+          "id": "d012",
+          "grade": "correct",
+          "faithfulness": "supported",
+          "cause": null,
+          "reason": "For-loop at parse time vs scheduler determining task count from upstream output at runtime; excerpt [1]."
+        },
+        {
+          "id": "d015",
+          "grade": "correct",
+          "faithfulness": "supported",
+          "cause": null,
+          "reason": "Backfill max_active_runs is independent of the Dag setting; excerpt [1]. Answer opens with a pasted heading fragment."
+        },
+        {
+          "id": "d022",
+          "grade": "correct",
+          "faithfulness": "supported",
+          "cause": null,
+          "reason": "Slack API token, in the Password field; excerpts [1]/[3]."
+        },
+        {
+          "id": "d024",
+          "grade": "correct",
+          "faithfulness": "supported",
+          "cause": null,
+          "reason": "Only checks credentials via GetCallerIdentity, not access to specific services; excerpt [1]."
+        },
+        {
+          "id": "s030",
+          "grade": "partial",
+          "faithfulness": "supported",
+          "cause": "retrieval_miss",
+          "reason": "default_pool with 128 slots (excerpt [1]); priority_weight defaults missing, and priority-weight.rst was not retrieved."
+        },
+        {
+          "id": "s034",
+          "grade": "wrong",
+          "faithfulness": "supported",
+          "cause": "retrieval_content_miss",
+          "reason": "Says the docs do not cover it. dynamic-dag-generation.rst chunk [2] begins with the tail 'the DB.'; the metadata-DB sentence is not in any excerpt."
+        },
+        {
+          "id": "s038",
+          "grade": "correct",
+          "faithfulness": "supported",
+          "cause": null,
+          "reason": "Access to specific AWS services is unanswered; excerpt [1]."
+        },
+        {
+          "id": "s042",
+          "grade": "wrong",
+          "faithfulness": "supported",
+          "cause": "retrieval_miss",
+          "reason": "Says the docs do not cover it; neither expected source was retrieved (hit@5 false)."
+        }
+      ]
+    },
+    "llama3.1:8b-instruct-q4_K_M": {
+      "answers_file": "rag_dev_llama3.1_8b-instruct-q4_K_M.json",
+      "counts": {
+        "correct": 7,
+        "partial": 1,
+        "wrong": 4
+      },
+      "score": 7.5,
+      "faithfulness": {
+        "supported": 10,
+        "partly_supported": 0,
+        "unsupported": 2
+      },
+      "adversarial": [
+        {
+          "id": "a045",
+          "declined": true
+        },
+        {
+          "id": "a048",
+          "declined": true
+        },
+        {
+          "id": "a051",
+          "declined": true
+        }
+      ],
+      "n_declined": 3,
+      "graded": [
+        {
+          "id": "d000",
+          "grade": "correct",
+          "faithfulness": "supported",
+          "cause": null,
+          "reason": "Current task in Airflow 3, Airflow 2 searched all tasks; excerpts [1]/[5]."
+        },
+        {
+          "id": "d003",
+          "grade": "wrong",
+          "faithfulness": "supported",
+          "cause": "retrieval_content_miss",
+          "reason": "Answers that tasks occupy one pool slot by default (true in excerpt [3]) instead of naming default_pool, which is not in any excerpt."
+        },
+        {
+          "id": "d006",
+          "grade": "correct",
+          "faithfulness": "supported",
+          "cause": null,
+          "reason": "Priority-weight of the task and its descendants; excerpt [2]."
+        },
+        {
+          "id": "d009",
+          "grade": "correct",
+          "faithfulness": "supported",
+          "cause": null,
+          "reason": "Edit the pool; quotes the deferring.rst sentence (present in excerpts [2] and [5]) but labels it [1] and [5]. Citation labels were not requested and are not scored."
+        },
+        {
+          "id": "d012",
+          "grade": "correct",
+          "faithfulness": "supported",
+          "cause": null,
+          "reason": "Defers task creation until runtime vs parse-time for-loop; excerpt [1]."
+        },
+        {
+          "id": "d015",
+          "grade": "correct",
+          "faithfulness": "supported",
+          "cause": null,
+          "reason": "Quotes backfill.rst: backfill max_active_runs applied independently; excerpt [1]."
+        },
+        {
+          "id": "d022",
+          "grade": "correct",
+          "faithfulness": "supported",
+          "cause": null,
+          "reason": "Slack API token; excerpt [1]."
+        },
+        {
+          "id": "d024",
+          "grade": "correct",
+          "faithfulness": "supported",
+          "cause": null,
+          "reason": "Quotes excerpt [1]: only checks credentials are valid, not access to specific services."
+        },
+        {
+          "id": "s030",
+          "grade": "partial",
+          "faithfulness": "supported",
+          "cause": "retrieval_miss",
+          "reason": "Both 'defaults' are about default_pool (name and 128 slots, excerpt [1]); priority_weight defaults missing, priority-weight.rst not retrieved."
+        },
+        {
+          "id": "s034",
+          "grade": "wrong",
+          "faithfulness": "supported",
+          "cause": "retrieval_content_miss",
+          "reason": "Describes env-var Variables (precedence, not shown in UI), all in excerpt [1], but not the parse-time metadata-DB reason, which is not in any excerpt."
+        },
+        {
+          "id": "s038",
+          "grade": "wrong",
+          "faithfulness": "unsupported",
+          "cause": "generation",
+          "reason": "Says the docs do not cover it, but excerpt [1] states the test cannot validate access to specific AWS services."
+        },
+        {
+          "id": "s042",
+          "grade": "wrong",
+          "faithfulness": "unsupported",
+          "cause": "retrieval_miss",
+          "reason": "Admits the excerpts do not answer, then infers two points from unrelated excerpts (might_contain_dag, DefaultPolicy) that the excerpts do not support."
+        }
+      ]
+    }
+  }
+}

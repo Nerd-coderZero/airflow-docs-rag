@@ -1,0 +1,385 @@
+[
+  {
+    "question": "I left `task_ids` out of `xcom_pull()`. Which task's XCom am I actually getting?",
+    "expected_source": "airflow-core/docs/core-concepts/xcoms.rst",
+    "expected_answer": "Only the current task's XCom is pulled when `task_ids` is omitted. The packet notes that this differs from Airflow 2, where the call searched all tasks.",
+    "type": "direct"
+  },
+  {
+    "question": "Are XComs meant for passing around big objects, or should I keep them pretty small?",
+    "expected_source": "airflow-core/docs/core-concepts/xcoms.rst",
+    "expected_answer": "They are intended for small amounts of data; the packet specifically says not to use them for large values such as dataframes.",
+    "type": "direct"
+  },
+  {
+    "question": "I need an XCom from a different task. What do I have to put in the pull call?",
+    "expected_source": "airflow-core/docs/core-concepts/xcoms.rst",
+    "expected_answer": "Specify `task_ids` explicitly when pulling from another task.",
+    "type": "direct"
+  },
+  {
+    "question": "I didn't give my task a pool. Is there some pool it falls into automatically?",
+    "expected_source": "airflow-core/docs/administration-and-deployment/pools.rst",
+    "expected_answer": "Yes. It is assigned to `default_pool`.",
+    "type": "direct"
+  },
+  {
+    "question": "What size is `default_pool` when it's first created?",
+    "expected_source": "airflow-core/docs/administration-and-deployment/pools.rst",
+    "expected_answer": "It is initialized with 128 slots.",
+    "type": "direct"
+  },
+  {
+    "question": "Can `default_pool` be removed if I don't want to use it?",
+    "expected_source": "airflow-core/docs/administration-and-deployment/pools.rst",
+    "expected_answer": "No. It can be modified through the UI or CLI, but it cannot be removed.",
+    "type": "direct"
+  },
+  {
+    "question": "Two tasks are sitting in the queue waiting for the same pool. What does Airflow look at when deciding what runs next?",
+    "expected_source": "airflow-core/docs/administration-and-deployment/pools.rst",
+    "expected_answer": "Queued tasks start based on the priority-weight of the task and its descendants.",
+    "type": "direct"
+  },
+  {
+    "question": "What does Airflow mean by the `downstream` weighting method?",
+    "expected_source": "airflow-core/docs/administration-and-deployment/priority-weight.rst",
+    "expected_answer": "With the default downstream method, a task's effective weight is the aggregate sum of its downstream descendants.",
+    "type": "direct"
+  },
+  {
+    "question": "If a task is deferred for a while, should I count its pool slot as still being occupied?",
+    "expected_source": "airflow-core/docs/authoring-and-scheduling/deferring.rst",
+    "expected_answer": "Not normally. Deferred tasks do not occupy pool slots by default.",
+    "type": "direct"
+  },
+  {
+    "question": "Is there a way to make deferred tasks keep their pool slots?",
+    "expected_source": "airflow-core/docs/authoring-and-scheduling/deferring.rst",
+    "expected_answer": "Yes. The relevant pool can be edited so deferred tasks occupy slots.",
+    "type": "direct"
+  },
+  {
+    "question": "The deferring docs mention another option in Airflow 3.2. What is it?",
+    "expected_source": "airflow-core/docs/authoring-and-scheduling/deferring.rst",
+    "expected_answer": "Airflow 3.2 supports Python-native async tasks.",
+    "type": "direct"
+  },
+  {
+    "question": "If the number of task instances depends on something that happens upstream, when does dynamic mapping figure that out?",
+    "expected_source": "airflow-core/docs/authoring-and-scheduling/dynamic-task-mapping.rst",
+    "expected_answer": "Task creation is deferred until runtime, allowing the scheduler to determine the exact number from upstream task outputs.",
+    "type": "direct"
+  },
+  {
+    "question": "Why would dynamic task mapping be different from putting a `for` loop in the DAG file?",
+    "expected_source": "airflow-core/docs/authoring-and-scheduling/dynamic-task-mapping.rst",
+    "expected_answer": "A Python `for` loop runs at DAG parse time, while dynamic task mapping defers task creation until runtime.",
+    "type": "direct"
+  },
+  {
+    "question": "I tried giving `expand()` positional arguments. Is that supported?",
+    "expected_source": "airflow-core/docs/authoring-and-scheduling/dynamic-task-mapping.rst",
+    "expected_answer": "No. Only keyword arguments are allowed to be passed to `expand()`.",
+    "type": "direct"
+  },
+  {
+    "question": "Is backfill useful for a DAG that doesn't have a time-based schedule?",
+    "expected_source": "airflow-core/docs/core-concepts/backfill.rst",
+    "expected_answer": "No. The packet says backfill does not make sense for DAGs without a time-based schedule.",
+    "type": "direct"
+  },
+  {
+    "question": "Does a backfill have to obey the DAG's `max_active_runs`, or can it have its own limit?",
+    "expected_source": "airflow-core/docs/core-concepts/backfill.rst",
+    "expected_answer": "A backfill can set `max_active_runs` independently of the DAG's `max_active_runs` setting.",
+    "type": "direct"
+  },
+  {
+    "question": "What's the command-line switch for doing a backfill from the newest runs backwards?",
+    "expected_source": "airflow-core/docs/core-concepts/backfill.rst",
+    "expected_answer": "Use `--run-backwards`.",
+    "type": "direct"
+  },
+  {
+    "question": "Which bits of the connection and variable configuration does Fernet protect according to the packet?",
+    "expected_source": "airflow-core/docs/security/secrets/fernet.rst",
+    "expected_answer": "Airflow uses Fernet to encrypt passwords in the connection configuration and the variable configuration.",
+    "type": "direct"
+  },
+  {
+    "question": "What happens with the Fernet key when Airflow is first started?",
+    "expected_source": "airflow-core/docs/security/secrets/fernet.rst",
+    "expected_answer": "The generated `airflow.cfg` contains the default configuration and a unique Fernet key.",
+    "type": "direct"
+  },
+  {
+    "question": "If I already have my own Fernet key, where can I put it through the environment?",
+    "expected_source": "airflow-core/docs/security/secrets/fernet.rst",
+    "expected_answer": "Set `AIRFLOW__CORE__FERNET_KEY`.",
+    "type": "direct"
+  },
+  {
+    "question": "Why can reading an Airflow Variable from the top of a DAG file be surprisingly expensive?",
+    "expected_source": "airflow-core/docs/howto/dynamic-dag-generation.rst",
+    "expected_answer": "It creates a connection to the Airflow metadata DB to fetch the value, which can slow parsing and put extra load on the DB.",
+    "type": "direct"
+  },
+  {
+    "question": "For a value that only configures my DAG code, what does the packet suggest using instead of an Airflow Variable?",
+    "expected_source": "airflow-core/docs/howto/dynamic-dag-generation.rst",
+    "expected_answer": "Environment variables.",
+    "type": "direct"
+  },
+  {
+    "question": "For Slack, what kind of credential is the connection expecting?",
+    "expected_source": "providers/slack/docs/connections/slack.rst",
+    "expected_answer": "A Slack API token.",
+    "type": "direct",
+    "corpus_area": "provider:slack"
+  },
+  {
+    "question": "If I don't specify a Slack connection ID, which one does the provider use by default?",
+    "expected_source": "providers/slack/docs/connections/slack.rst",
+    "expected_answer": "`slack_api_default`.",
+    "type": "direct",
+    "corpus_area": "provider:slack"
+  },
+  {
+    "question": "What does the AWS connection test actually prove?",
+    "expected_source": "providers/amazon/docs/connections/aws.rst",
+    "expected_answer": "It can check whether the credentials are valid by invoking AWS STS `GetCallerIdentity`, but it cannot verify access to a particular AWS service.",
+    "type": "direct",
+    "corpus_area": "provider:amazon"
+  },
+  {
+    "question": "If I'm talking to MinIO or LocalStack, should I assume a failed AWS connection test means my credentials are bad?",
+    "expected_source": "providers/amazon/docs/connections/aws.rst",
+    "expected_answer": "No. The packet says that with AWS API-compatible services such as MinIO or LocalStack, a connection test failure does not necessarily mean the credentials are wrong.",
+    "type": "direct",
+    "corpus_area": "provider:amazon"
+  },
+  {
+    "question": "What authentication choices are actually listed for Google Cloud here?",
+    "expected_source": "providers/google/docs/connections/gcp.rst",
+    "expected_answer": "Application Default Credentials, a service account with a key file, or a key supplied as a payload or as a secret in Secret Manager.",
+    "type": "direct",
+    "corpus_area": "provider:google"
+  },
+  {
+    "question": "Can a Google Cloud connection specify more than one of those key options at once?",
+    "expected_source": "providers/google/docs/connections/gcp.rst",
+    "expected_answer": "No. Only one way of defining the key can be used at a time.",
+    "type": "direct",
+    "corpus_area": "provider:google"
+  },
+  {
+    "question": "I'm using `DatabricksCopyIntoOperator`. Which arguments does the packet say I absolutely need?",
+    "expected_source": "providers/databricks/docs/operators/copy_into.rst",
+    "expected_answer": "`table_name`, `file_location`, `file_format`, and one of `sql_endpoint_name` or `http_path`.",
+    "type": "direct",
+    "corpus_area": "provider:databricks"
+  },
+  {
+    "question": "Which file formats are listed as supported by `DatabricksCopyIntoOperator`?",
+    "expected_source": "providers/databricks/docs/operators/copy_into.rst",
+    "expected_answer": "CSV, JSON, AVRO, ORC, PARQUET, TEXT, and BINARYFILE.",
+    "type": "direct",
+    "corpus_area": "provider:databricks"
+  },
+  {
+    "question": "If I give a task no pool, and it ends up competing with other queued work, what two defaults should I know about?",
+    "expected_source": [
+      "airflow-core/docs/administration-and-deployment/pools.rst",
+      "airflow-core/docs/administration-and-deployment/priority-weight.rst"
+    ],
+    "expected_answer": "It goes into `default_pool`, which starts with 128 slots. The default priority_weight is 1 and the default weighting method is downstream.",
+    "type": "synthesis"
+  },
+  {
+    "question": "My pool has one slot left and several tasks are queued. Why isn't it enough to know the pool size to predict which task goes next?",
+    "expected_source": [
+      "airflow-core/docs/administration-and-deployment/pools.rst",
+      "airflow-core/docs/administration-and-deployment/priority-weight.rst"
+    ],
+    "expected_answer": "The pool docs say queued tasks run according to priority-weight, while the priority-weight docs explain how that weight is determined. By default, downstream descendants contribute to the effective weight.",
+    "type": "synthesis"
+  },
+  {
+    "question": "Suppose a task is waiting in the deferred state. How does that normally affect the pool, and what happens if the pool is configured differently?",
+    "expected_source": [
+      "airflow-core/docs/authoring-and-scheduling/deferring.rst",
+      "airflow-core/docs/administration-and-deployment/pools.rst"
+    ],
+    "expected_answer": "A deferred task normally does not occupy a pool slot. The pool can be edited so that deferred tasks do occupy slots; pool capacity then affects when queued work can run.",
+    "type": "synthesis"
+  },
+  {
+    "question": "I've got an upstream result that determines how many mapped tasks I need. Which part happens at runtime, and which part is responsible for passing values between tasks?",
+    "expected_source": [
+      "airflow-core/docs/authoring-and-scheduling/dynamic-task-mapping.rst",
+      "airflow-core/docs/core-concepts/xcoms.rst"
+    ],
+    "expected_answer": "Dynamic task mapping defers task creation until runtime and uses upstream outputs to determine the number of instances. XComs are the push/pull mechanism described for passing small amounts of data between tasks.",
+    "type": "synthesis"
+  },
+  {
+    "question": "Why is an environment variable preferred for something read while the DAG is being parsed, even though Airflow also has Variables?",
+    "expected_source": [
+      "airflow-core/docs/howto/dynamic-dag-generation.rst",
+      "airflow-core/docs/security/secrets/fernet.rst"
+    ],
+    "expected_answer": "Top-level Airflow Variable access requires a metadata DB lookup and can slow parsing and add DB load. Separately, the security excerpt says Airflow uses Fernet to encrypt passwords in variable and connection configuration.",
+    "type": "synthesis"
+  },
+  {
+    "question": "If I need to move a small result from one task to another, what does the packet point me toward, and what kind of data should I stay away from?",
+    "expected_source": [
+      "airflow-core/docs/core-concepts/xcoms.rst",
+      "airflow-core/docs/authoring-and-scheduling/dynamic-task-mapping.rst"
+    ],
+    "expected_answer": "Use XCom push/pull for small amounts of data. The packet specifically warns against using XComs for large values such as dataframes; dynamic mapping can instead use upstream outputs to determine mapped task count at runtime.",
+    "type": "synthesis"
+  },
+  {
+    "question": "I want a backfill to work newest-first, but I also don't want too many backfill runs active. Are those controlled by the same setting?",
+    "expected_source": [
+      "airflow-core/docs/core-concepts/backfill.rst",
+      "airflow-core/docs/administration-and-deployment/pools.rst"
+    ],
+    "expected_answer": "No single setting does both. Backfill has its own `max_active_runs`, independently of the DAG setting, and `--run-backwards` controls the direction. Pool settings separately concern task capacity and queueing.",
+    "type": "synthesis"
+  },
+  {
+    "question": "If a task has lots of downstream work, can that affect how it competes with another queued task for a pool slot?",
+    "expected_source": [
+      "airflow-core/docs/administration-and-deployment/pools.rst",
+      "airflow-core/docs/administration-and-deployment/priority-weight.rst"
+    ],
+    "expected_answer": "Yes. The pools docs say queue order uses priority-weight of the task and its descendants, and the priority-weight docs say the default downstream method aggregates downstream descendants into the effective weight.",
+    "type": "synthesis"
+  },
+  {
+    "question": "If an AWS connection test succeeds, what question about permissions is still unanswered?",
+    "expected_source": [
+      "providers/amazon/docs/connections/aws.rst",
+      "airflow-core/docs/administration-and-deployment/pools.rst"
+    ],
+    "expected_answer": "The test can establish that the credentials are valid through `GetCallerIdentity`, but it cannot establish access to a particular AWS service. Pool behavior is unrelated to that credential-permission check.",
+    "type": "synthesis"
+  },
+  {
+    "question": "Google Cloud gives me several ways to provide a key, while Slack talks about an API token. Can I treat those as interchangeable connection settings?",
+    "expected_source": [
+      "providers/google/docs/connections/gcp.rst",
+      "providers/slack/docs/connections/slack.rst"
+    ],
+    "expected_answer": "No such interchangeability is established by the packet. GCP documents its own credential choices, while Slack documents authentication with a Slack API token and a default connection ID.",
+    "type": "synthesis"
+  },
+  {
+    "question": "If I dynamically create a lot of tasks and they all land in a busy pool, what does each of the two docs tell me?",
+    "expected_source": [
+      "airflow-core/docs/authoring-and-scheduling/dynamic-task-mapping.rst",
+      "airflow-core/docs/administration-and-deployment/pools.rst"
+    ],
+    "expected_answer": "Dynamic mapping explains that the scheduler determines the number of task instances at runtime from upstream outputs. The pools docs explain that once tasks are queued, slots become available according to pool capacity and queued tasks are started based on priority-weight.",
+    "type": "synthesis"
+  },
+  {
+    "question": "Could a deferred task be holding onto capacity while I'm waiting for it, or is that not the normal behavior? And does queue priority still exist separately?",
+    "expected_source": [
+      "airflow-core/docs/authoring-and-scheduling/deferring.rst",
+      "airflow-core/docs/administration-and-deployment/priority-weight.rst"
+    ],
+    "expected_answer": "Deferred tasks do not occupy pool slots by default, although the pool can be configured otherwise. Priority-weight is a separate concept used for executor queue priorities, with downstream weighting as the default.",
+    "type": "synthesis"
+  },
+  {
+    "question": "I want a value available when my DAG is parsed and I'm also thinking about how Airflow protects stored values. What are the two separate points the packet makes?",
+    "expected_source": [
+      "airflow-core/docs/howto/dynamic-dag-generation.rst",
+      "airflow-core/docs/security/secrets/fernet.rst"
+    ],
+    "expected_answer": "For top-level DAG configuration, the packet recommends environment variables because Airflow Variables require a metadata DB lookup. Separately, Fernet is used to encrypt passwords in connection and variable configuration.",
+    "type": "synthesis"
+  },
+  {
+    "question": "The docs give me both deferred operators and Python-native async tasks. Is dynamic task mapping another name for either of those?",
+    "expected_source": [
+      "airflow-core/docs/authoring-and-scheduling/deferring.rst",
+      "airflow-core/docs/authoring-and-scheduling/dynamic-task-mapping.rst"
+    ],
+    "expected_answer": "No. The packet treats them as separate concepts: Airflow 3.2 supports Python-native async tasks alongside deferred operators, while dynamic task mapping is about creating task instances at runtime from upstream outputs.",
+    "type": "synthesis"
+  },
+  {
+    "question": "If my mapped task count comes from upstream output and the resulting tasks are queued, what two separate things am I relying on?",
+    "expected_source": [
+      "airflow-core/docs/authoring-and-scheduling/dynamic-task-mapping.rst",
+      "airflow-core/docs/administration-and-deployment/priority-weight.rst"
+    ],
+    "expected_answer": "Dynamic task mapping determines the number of task instances at runtime from upstream outputs. Priority-weight then provides the queue-priority concept; by default its weighting method is downstream.",
+    "type": "synthesis"
+  },
+  {
+    "question": "How do I configure a Snowflake connection in Airflow?",
+    "expected_source": "none",
+    "expected_answer": "No answer in corpus.",
+    "type": "adversarial"
+  },
+  {
+    "question": "I'm using the Postgres provider. What connection fields does the packet say I should fill in?",
+    "expected_source": "none",
+    "expected_answer": "No answer in corpus.",
+    "type": "adversarial"
+  },
+  {
+    "question": "What's the Airflow-specific setup for connecting the Kubernetes provider?",
+    "expected_source": "none",
+    "expected_answer": "No answer in corpus.",
+    "type": "adversarial"
+  },
+  {
+    "question": "How does Airflow authenticate to Salesforce in its provider connection?",
+    "expected_source": "none",
+    "expected_answer": "No answer in corpus.",
+    "type": "adversarial"
+  },
+  {
+    "question": "Can you tell me how the Datadog provider connection is configured?",
+    "expected_source": "none",
+    "expected_answer": "No answer in corpus.",
+    "type": "adversarial"
+  },
+  {
+    "question": "What exactly does `auto_retry_backoff_multiplier` change in Airflow?",
+    "expected_source": "none",
+    "expected_answer": "No answer in corpus.",
+    "type": "adversarial"
+  },
+  {
+    "question": "Where in the packet does it explain rotating keys in AWS Secrets Manager?",
+    "expected_source": "none",
+    "expected_answer": "No answer in corpus.",
+    "type": "adversarial"
+  },
+  {
+    "question": "Is there a setting in this corpus that automatically expands tasks from a database query?",
+    "expected_source": "none",
+    "expected_answer": "No answer in corpus.",
+    "type": "adversarial"
+  },
+  {
+    "question": "How do I configure an Oracle connection in Airflow?",
+    "expected_source": "none",
+    "expected_answer": "No answer in corpus.",
+    "type": "adversarial"
+  },
+  {
+    "question": "Can I use the Slack token setup from this packet to configure a Snowflake connection too?",
+    "expected_source": "none",
+    "expected_answer": "No answer in corpus.",
+    "type": "adversarial"
+  }
+]

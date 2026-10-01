@@ -1,0 +1,43 @@
+{
+  "ollama_version": "0.34.4",
+  "model": "qwen2.5:7b-instruct-q4_K_M",
+  "model_digest": "845dbda0ea48ed749caafd9e6037047aa19acfcfd82e704d7ca97d631a0b697e",
+  "parameter_size": "7.6B",
+  "quantization_level": "Q4_K_M",
+  "checked_at": "2026-09-30T09:04:26+0530",
+  "filler_words": 3000,
+  "codes": [
+    "KESTREL-4471",
+    "MARIGOLD-9036"
+  ],
+  "results": [
+    {
+      "content": "KESTREL-4471 MARIGOLD-9036",
+      "done_reason": "stop",
+      "prompt_eval_count": 5139,
+      "eval_count": 17,
+      "prompt_eval_seconds": 507.82,
+      "eval_seconds": 9.97,
+      "load_seconds": 18.9,
+      "latency_seconds": 538.86,
+      "num_ctx": 8192,
+      "found_start_code": true,
+      "found_end_code": true,
+      "passed": true
+    },
+    {
+      "content": "MARIGOLD-9036 MARIGOLD-9037",
+      "done_reason": "stop",
+      "prompt_eval_count": 2050,
+      "eval_count": 17,
+      "prompt_eval_seconds": 183.08,
+      "eval_seconds": 6.0,
+      "load_seconds": 7.26,
+      "latency_seconds": 198.56,
+      "num_ctx": null,
+      "found_start_code": false,
+      "found_end_code": true,
+      "passed": false
+    }
+  ]
+}
