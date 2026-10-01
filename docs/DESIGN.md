@@ -531,3 +531,17 @@ The model saw the original placeholder text; no other content was changed,
 and no grade depends on these strings. Token-shaped patterns for Slack
 (`xox?-`, `hooks.slack.com`) were missing from the pre-push sweep and are
 now part of it.
+
+## Eval-set provenance (recorded 2026-10-01; facts from 2026-09-24)
+
+`eval/QUESTION_WRITING_GUIDE.md` is the original plan, which called for
+hand-written questions. That is not how the set was produced: an LLM
+drafted candidate questions from `eval/READING_PACKET.md` (pre-selected
+corpus excerpts), the author reworded them, and the result was verified
+against the pinned checkout -- all 45 non-adversarial expected sources
+resolve to real files, and a sample of specific facts was matched
+word-for-word against the file text. One adversarial item (Microsoft
+provider authentication) was caught as answerable during that check and
+replaced. The accurate description is "LLM-drafted, reworded by the
+author, verified against the corpus" -- not "hand-written", and not
+"LLM-generated" unqualified.
